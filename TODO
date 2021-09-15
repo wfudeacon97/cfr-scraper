@@ -1,20 +1,34 @@
+=======================================
+---------------------FAR--------------
+=======================================
 HIGH- FAR- Subpart html- add links @each SubPart/ Section
 HIGH- FAR- Add JavaScript to FAR html
+HIGH- FAR- compare Json
+HIGH- FAR- Html for Part (type-2)
+HIGH- FAR- deploy to test
+  - Setup reset (S3/ Mongo records to revert back to old)
+  - Mongo insert
+  - Elastic
+  - html -> S3
+
 MEDIUM- FAR- Find and create internal links (FAR links in text)
 MEDIUM- FAR- Indentation FAR 3.502-1 definitions ("Subcontractor")
 
+MODIFY Mongo to upsert, then delete old records
+Upload all html / json to S3 after load
 
+=======================================
+---------------------VAAR--------------
+=======================================
 HIGH- VAAR- Add JavaScript to VAAR html
 MEDIUM- VAAR- make font same as FAR
 MEDIUM- VAAR- Find and create internal links (FAR links in text)
 
-
 After Deployed:
 JavaScript Hovers for all FAR links
 
-
-
-
+MODIFY Mongo to upsert, then delete old records
+Upload all html / json to S3 after load
 
 =======================================
 ---------------------DONE--------------

@@ -10,9 +10,9 @@ if (len(sys.argv) -1) != 3:
 xmlFileToParse = sys.argv[1]
 htmlFolder = sys.argv[2]
 chapterToParse = sys.argv[3]
-print "Xml File: " + xmlFileToParse
-print "Chapter: " + chapterToParse
-print "Html Dir: " + htmlFolder
+print "        - Xml File: " + xmlFileToParse
+print "        - Chapter: " + chapterToParse
+print "        - Html Dir: " + htmlFolder
 
 class RawTitle():
     def __init__(self):
@@ -39,8 +39,7 @@ class CFRHandler( xml.sax.ContentHandler ):
     def __init__(self):
       self.CurrentData = ""
 
-###########################################
-# Call when an element starts
+    # Call when an element starts
     def startElement(self, tag, attributes):
       self.CurrentData = tag
       if tag == "DIV1":
@@ -91,7 +90,7 @@ class CFRHandler( xml.sax.ContentHandler ):
          currentTitle.PartNum = attributes["N"]
          if currentTitle.ChapterNum == chapterToParse:
            currentTitle.partFile = open(htmlFolder + "/" +currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.SubChapterNum + "."+ currentTitle.PartNum + ".html", "a")
-           #currentTitle.partFile.write("<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
+           currentTitle.partFile.write("<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
            currentTitle.hasPartFile = "Y"
       elif tag == "DIV6":
          currentTitle.Level = "SubPart"
@@ -103,40 +102,7 @@ class CFRHandler( xml.sax.ContentHandler ):
          currentTitle.Level = "Section"
          currentTitle.SectionStr = ""
          currentTitle.SectionNum = attributes["N"]
-      elif tag == "P":
-        if currentTitle.Level == "Section":
-          if currentTitle.hasPartFile == "Y" :
-            classAttr= attributes.get("class", "bad")
-            if classAttr == "gpotbl_title":
-               currentTitle.partFile.write("<p style=\"font-weight: bold;text-align:center;\">")
-            else:
-               currentTitle.partFile.write("<p class=\"p\">")
-      elif tag == "I":
-        if currentTitle.Level == "Section":
-             if currentTitle.hasPartFile == "Y" :
-               currentTitle.partFile.write("<i>")
-      elif tag == "TABLE":
-        if currentTitle.Level == "Section":
-             if currentTitle.hasPartFile == "Y" :
-               currentTitle.partFile.write("<TABLE border=\"1\" cellpadding=\"1\" cellspacing=\"1\" frame=\"void\" width=\"100%\">\n")
-      elif tag == "TR":
-        if currentTitle.Level == "Section":
-             if currentTitle.hasPartFile == "Y" :
-               currentTitle.partFile.write("<TR>")
-      elif tag == "TH":
-        if currentTitle.Level == "Section":
-             if currentTitle.hasPartFile == "Y" :
-               currentTitle.partFile.write("<TH>")
-      elif tag == "TD":
-        if currentTitle.Level == "Section":
-             if currentTitle.hasPartFile == "Y" :
-               currentTitle.partFile.write("<TD align=\"left\">")
-      elif tag == "br":
-        if currentTitle.Level == "Section":
-             if currentTitle.hasPartFile == "Y" :
-               currentTitle.partFile.write("<br/>")
 
-###########################################
     # Call when an elements ends
     def endElement(self, tag):
       if tag == "DIV3":
@@ -145,52 +111,33 @@ class CFRHandler( xml.sax.ContentHandler ):
         currentTitle.Level = "Chapter"
       elif tag == "DIV5":
         currentTitle.Level = "SubChapter"
+        ## This is the end of the top section of the file... add the authority and line break, and close the file
         if currentTitle.hasPartFile == "Y" :
+          currentTitle.partFile.write("</table>")
+          currentTitle.partFile.write("<p id=authority>"+ currentTitle.authority+ "</p>\n")
+          currentTitle.partFile.write("<hr/>\n")
           currentTitle.partFile.write("</article>\n")
-          currentTitle.partFile.write("<style type=\"text/css\">\n")
-          currentTitle.partFile.write("a {text-decoration: none; font-size: 16px; color: #0072ce !important;}\n")
-          currentTitle.partFile.write("a:hover {text-decoration: underline; color: #0072ce}\n")
-          currentTitle.partFile.write("body {background-color: #FFFFFF;}\n")
-          currentTitle.partFile.write("</style>")
-          currentTitle.partFile.write("</body>")
+          #currentTitle.partFile.write("<style type=\"text/css\">\n")
+          #currentTitle.partFile.write("a {text-decoration: none; font-size: 16px; color: #0072ce !important;}\n")
+          #currentTitle.partFile.write("a:hover {text-decoration: underline; color: #0072ce}\n")
+          #currentTitle.partFile.write("body {background-color: #FFFFFF;}\n")
+          #currentTitle.partFile.write("</style>")
+          #currentTitle.partFile.write("</body>")
+          #print "Closing file " + currentTitle.partFile.name
           currentTitle.partFile.close()
           currentTitle.partFile = None
           currentTitle.hasPartFile = "N"
           currentTitle.authority = "AUTHORITY: "
       elif tag == "DIV6":
         currentTitle.Level = "Part"
-        if currentTitle.hasPartFile == "Y" :
-          currentTitle.partFile.write("</article>\n")
+        #if currentTitle.hasPartFile == "Y" :
+        #  currentTitle.partFile.write("</article>\n")
+        #  currentTitle.partFile.write("</table>")
       elif tag == "DIV8":
         currentTitle.Level = "SubPart"
-        if currentTitle.hasPartFile == "Y" :
-          currentTitle.partFile.write("</article>\n")
-      elif tag == "P":
-        if currentTitle.Level == "Section":
-          if currentTitle.hasPartFile == "Y" :
-            currentTitle.partFile.write("</p>\n")
-      elif tag == "I":
-        if currentTitle.Level == "Section":
-          if currentTitle.hasPartFile == "Y" :
-            currentTitle.partFile.write("</i>")
-      elif tag == "TR":
-        if currentTitle.Level == "Section":
-          if currentTitle.hasPartFile == "Y" :
-            currentTitle.partFile.write("</TR>\n")
-      elif tag == "TD":
-        if currentTitle.Level == "Section":
-          if currentTitle.hasPartFile == "Y" :
-            currentTitle.partFile.write("</TD>")
-      elif tag == "TABLE":
-        if currentTitle.Level == "Section":
-          if currentTitle.hasPartFile == "Y" :
-            currentTitle.partFile.write("</TABLE>\n")
-      elif tag == "TH":
-        if currentTitle.Level == "Section":
-          if currentTitle.hasPartFile == "Y" :
-            currentTitle.partFile.write("</TH>\n")
+        #if currentTitle.hasPartFile == "Y" :
+        #  currentTitle.partFile.write("</article>\n")
 
-###########################################
     # Call when a character is read
     def characters(self, content):
       if currentTitle.Level == "Title":
@@ -212,33 +159,36 @@ class CFRHandler( xml.sax.ContentHandler ):
         if self.CurrentData == "HEAD":
           if content != "\n":
             currentTitle.PartStr = content
+            if currentTitle.hasPartFile == "Y" :
+              currentTitle.partFile.write("\n<title>" + content.encode("utf-8") + "</title></head>\n<body>\n")
+              id=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.PartNum
+              currentTitle.partFile.write("<article id=\"" + id +"\"><h1 id=\"toc_"+id+"\"><span class=\"ph autonumber\">" + content.encode("utf-8") + "</span></h1></article>\n")
+              # currentTitle.partFile.write("<p>Sec.</p>\n")
+              currentTitle.partFile.write("<table width=100%>")
       elif currentTitle.Level == "SubPart":
         if self.CurrentData == "HEAD":
           if content != "\n":
-            currentTitle.SubPartStr = content
             if currentTitle.hasPartFile == "Y" :
-              id=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubPartNum
-              subpartFileName=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.SubPartNum
-              currentTitle.partFile.write("<article id=\"" + id +"\"><h1 id=\"section_"+ id +"\"><span class=\"ph autonumber\">")
-              currentTitle.partFile.write(content.encode("utf-8") + "</span></h1>\n")
+              currentTitle.SubPartStr = content
+              id=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SectionNum
+              link=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SectionNum
+
+              currentTitle.partFile.write("</table>")
+              currentTitle.partFile.write("<article id=\"" + id +"\"><h3 id=\"toc_"+id+"\"><span class=\"ph autonumber\">")
+              currentTitle.partFile.write(content.encode("utf-8") + "</span></h3></article>\n")
+              currentTitle.partFile.write("<table width=100%>")
       elif currentTitle.Level == "Section":
         if self.CurrentData == "HEAD":
           if content != "\n":
             currentTitle.SectionStr = content
             if currentTitle.hasPartFile == "Y" :
               id=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SectionNum
-              subpartFileName=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.SubPartNum
               link=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SectionNum
-              currentTitle.partFile.write("<article id=\"" + id +"\"><div id=\"section_"+ id +"\"><p class=\"ph autonumber\"><b><u>")
-              currentTitle.partFile.write(currentTitle.SectionStr.encode("utf-8") + "</u></b></p></div>\n")
-        elif self.CurrentData == "P":
-          if currentTitle.hasPartFile == "Y" :
-            if content != "\n":
-              currentTitle.partFile.write(content.encode("utf-8"))
-        else:
-          if currentTitle.hasPartFile == "Y" :
-            if content != "\n":
-              currentTitle.partFile.write(content.encode("utf-8"))
+              currentTitle.partFile.write("<tr><td style=\"width: 20%;\">")
+              currentTitle.partFile.write("<div id=\""+ id +"\" class=\"ph autonumber\">")
+              currentTitle.partFile.write("<a href=\"#section_" +link +"\" >" + currentTitle.SectionNum + "</a></div></td><td>")
+              title=content.replace(currentTitle.SectionNum, "", 1)
+              currentTitle.partFile.write(title.encode("utf-8") + "</td></tr>\n")
 
 # create an XMLReader
 parser = xml.sax.make_parser()
