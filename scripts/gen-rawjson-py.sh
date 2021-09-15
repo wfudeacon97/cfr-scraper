@@ -1,19 +1,20 @@
 #!/usr/bin/python
 import xml.sax
+import json
 import sys
-import re
 
-if (len(sys.argv) -1) != 3:
-  print 'ERROR: Expecting the following arguments: [xml_file] [html_dir] [Title#]'
+if (len(sys.argv) -1) != 2:
+  print 'ERROR: Expecting the following arguments: [xml_file] [Title#]'
   quit(1)
 
 #"tmp/raw-2021-08-24.xml"
 xmlFileToParse = sys.argv[1]
-htmlFolder = sys.argv[2]
-chapterToParse = sys.argv[3]
-print "Xml File: " + xmlFileToParse
-print "Chapter: " + chapterToParse
-print "Html Dir: " + htmlFolder
+chapterToParse = sys.argv[2]
+print "   - Xml File: " + xmlFileToParse
+print "   - Chapter: " + chapterToParse
+jsonSectionFile = open("tmp/raw-section-" + chapterToParse + ".json", "a")
+jsonSubPartFile = open("tmp/raw-subpart-" + chapterToParse + ".json", "a")
+jsonSubChapterFile = open("tmp/raw-subchapter-" + chapterToParse + ".json", "a")
 
 class RawTitle():
     def __init__(self):
@@ -30,10 +31,96 @@ class RawTitle():
       self.SubPartStr = ""
       self.SectionNum = ""
       self.SectionStr = ""
-      self.subpartFile = None
-      self.hasSubPartFile = "N"
+      self.content = ""
 
 currentTitle= RawTitle()
+
+def printSectionJson(currentTitle):
+  if currentTitle.ChapterNum == chapterToParse:
+    jsonData = {}
+    cfr = {}
+    oid = {}
+    jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.PartNum + ".html#" + currentTitle.SectionNum
+
+    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.SectionNum
+
+    type=5
+    jsonData['title'] = currentTitle.SectionStr
+    jsonData['noticeType'] = 1
+    jsonData['content'] = currentTitle.content
+    jsonData['type'] = type
+    jsonData['__v'] = 0
+    cfr['title'] = currentTitle.TitleNum
+    cfr['part'] = currentTitle.PartNum
+    cfr['chapter'] = currentTitle.SubChapterNum
+    cfr['subPart'] = currentTitle.SubPartNum
+    cfr['subTopic'] = currentTitle.SectionNum
+    oid["$oid"]= myOid
+    jsonData['cfrIdentifier'] = cfr
+    jsonData['_id'] = myOid
+    #createdAt
+    #updatedAt
+    #agencies
+    jsonSectionFile.write(json.dumps(jsonData))
+    jsonSectionFile.write("\n")
+
+def printSubPartJson(currentTitle):
+  if currentTitle.ChapterNum == chapterToParse:
+    jsonData = {}
+    cfr = {}
+    oid = {}
+    jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.PartNum + ".html"
+
+    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.SubPartNum
+
+    type=3
+    jsonData['title'] = currentTitle.SubPartStr
+    jsonData['noticeType'] = 1
+    jsonData['content'] = ""
+    jsonData['type'] = type
+    jsonData['__v'] = 0
+    cfr['title'] = currentTitle.TitleNum
+    cfr['part'] = currentTitle.PartNum
+    cfr['chapter'] = currentTitle.SubChapterNum
+    cfr['subPart'] = currentTitle.SubPartNum
+    cfr['subTopic'] = None
+    oid["$oid"]= myOid
+    jsonData['cfrIdentifier'] = cfr
+    jsonData['_id'] = myOid
+    #createdAt
+    #updatedAt
+    #agencies
+    jsonSubPartFile.write(json.dumps(jsonData))
+    jsonSubPartFile.write("\n")
+
+def printSubChapterJson(currentTitle):
+  if currentTitle.ChapterNum == chapterToParse:
+    jsonData = {}
+    cfr = {}
+    oid = {}
+    jsonData['htmlUrl'] = "#"
+
+    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum
+
+    type=1
+    jsonData['title'] = currentTitle.SubChapterStr
+    jsonData['noticeType'] = 1
+    jsonData['content'] = ""
+    jsonData['type'] = type
+    jsonData['__v'] = 0
+    cfr['title'] = currentTitle.TitleNum
+    cfr['part'] = None
+    cfr['chapter'] = currentTitle.SubChapterNum
+    cfr['subPart'] = None
+    cfr['subTopic'] = None
+    oid["$oid"]= myOid
+    jsonData['cfrIdentifier'] = cfr
+    jsonData['_id'] = myOid
+    #createdAt
+    #updatedAt
+    #agencies
+    jsonSubChapterFile.write(json.dumps(jsonData))
+    jsonSubChapterFile.write("\n")
 
 class CFRHandler( xml.sax.ContentHandler ):
     def __init__(self):
@@ -55,6 +142,7 @@ class CFRHandler( xml.sax.ContentHandler ):
          currentTitle.SubPartStr = ""
          currentTitle.SectionNum = ""
          currentTitle.SectionStr = ""
+         currentTitle.content = ""
          currentTitle.TitleNum = attributes["N"]
       #elif tag == "DIV2":
       #   currentTitle.Level = "DIV2"
@@ -69,6 +157,7 @@ class CFRHandler( xml.sax.ContentHandler ):
          currentTitle.SubPartStr = ""
          currentTitle.SectionNum = ""
          currentTitle.SectionStr = ""
+         currentTitle.content = ""
          currentTitle.ChapterNum = attributes["N"]
       elif tag == "DIV4":
          currentTitle.Level = "SubChapter"
@@ -79,6 +168,7 @@ class CFRHandler( xml.sax.ContentHandler ):
          currentTitle.SubPartStr = ""
          currentTitle.SectionNum = ""
          currentTitle.SectionStr = ""
+         currentTitle.content = ""
          currentTitle.SubChapterNum = attributes["N"]
       elif tag == "DIV5":
          currentTitle.Level = "Part"
@@ -87,66 +177,38 @@ class CFRHandler( xml.sax.ContentHandler ):
          currentTitle.SubPartStr = ""
          currentTitle.SectionNum = ""
          currentTitle.SectionStr = ""
+         currentTitle.content = ""
          currentTitle.PartNum = attributes["N"]
       elif tag == "DIV6":
          currentTitle.Level = "SubPart"
          currentTitle.SubPartStr = ""
          currentTitle.SectionNum = ""
          currentTitle.SectionStr = ""
+         currentTitle.content = ""
          currentTitle.SubPartNum = attributes["N"]
-         if currentTitle.ChapterNum == chapterToParse:
-           subpartFileName=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.SubPartNum
-           currentTitle.subpartFile = open(htmlFolder + "/" +subpartFileName + ".html", "a")
-           currentTitle.subpartFile.write("<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
-           currentTitle.hasSubPartFile = "Y"
       #elif tag == "DIV7":
       #   currentTitle.Level = "DIV7"
       elif tag == "DIV8":
          currentTitle.Level = "Section"
          currentTitle.SectionStr = ""
          currentTitle.SectionNum = attributes["N"]
-      elif tag == "P":
-         if currentTitle.Level == "Section":
-            if currentTitle.hasSubPartFile == "Y" :
-              currentTitle.subpartFile.write("<p class=\"p\">")
-      #elif tag == "CITA":
-      #   if currentTitle.Level == "Section":
-      #      if currentTitle.hasSubPartFile == "Y" :
-      #        currentTitle.subpartFile.write("<div>")
-      elif tag == "I":
-         if currentTitle.Level == "Section":
-            if currentTitle.hasSubPartFile == "Y" :
-              currentTitle.subpartFile.write("<i>")
 
     # Call when an elements ends
     def endElement(self, tag):
       if tag == "DIV3":
-        currentTitle.Level = "Title"
+        currentTitle.Level == "Title"
       elif tag == "DIV4":
-        currentTitle.Level = "Chapter"
+        printSubChapterJson (currentTitle)
+        currentTitle.Level == "Chapter"
       elif tag == "DIV5":
-        currentTitle.Level = "SubChapter"
+        currentTitle.Level == "SubChapter"
       elif tag == "DIV6":
-        currentTitle.Level = "Part"
-        #print "Checking end of file " + currentTitle.subpartFile.name
-        if currentTitle.hasSubPartFile == "Y" :
-          currentTitle.subpartFile.write("</article></body>")
-          #print "Closing file " + currentTitle.subpartFile.name
-          currentTitle.subpartFile.close()
-          currentTitle.subpartFile = None
-          currentTitle.hasSubPartFile = "N"
+          currentTitle.Level == "Part"
+          printSubPartJson (currentTitle)
       elif tag == "DIV8":
-        currentTitle.Level = "SubPart"
-        if currentTitle.hasSubPartFile == "Y" :
-          currentTitle.subpartFile.write("</article>\n")
-      elif tag == "P":
-        if currentTitle.Level == "Section":
-          if currentTitle.hasSubPartFile == "Y" :
-            currentTitle.subpartFile.write("</p>\n")
-      elif self.CurrentData == "I":
-        if currentTitle.Level == "Section":
-          if currentTitle.hasSubPartFile == "Y" :
-            currentTitle.subpartFile.write("</i>")
+          printSectionJson (currentTitle)
+          currentTitle.content = ""
+          currentTitle.Level == "SubPart"
 
     # Call when a character is read
     def characters(self, content):
@@ -170,35 +232,13 @@ class CFRHandler( xml.sax.ContentHandler ):
         if self.CurrentData == "HEAD":
           if content != "\n":
             currentTitle.SubPartStr = content
-            if currentTitle.hasSubPartFile == "Y" :
-              currentTitle.subpartFile.write("\n<title>" + content.encode("utf-8") + "</title></head>\n<body>\n")
-              id=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubPartNum
-              currentTitle.subpartFile.write("<article id=\"" + id +"\"><h1 id=\"subpart_" + id + "\" style=\"text-align:center;\"><span class=\"ph autonumber\">" + content.encode("utf-8") + "</span></h1>\n")
       elif currentTitle.Level == "Section":
         if self.CurrentData == "HEAD":
           if content != "\n":
             currentTitle.SectionStr = content
-            if currentTitle.hasSubPartFile == "Y" :
-              #print "<article id=\"" + currentTitle.TitleNum + "." + currentTitle.ChapterNum "." + currentTitle.SectionNum +"\"><h1 id=\"Section_Hdr\" id=\"ariaid-title1\"><span class=\"ph autonumber\">" + content.encode("utf-8") + "</span></h1>\n"
-              id=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SectionNum
-              currentTitle.subpartFile.write("<article id=\"" + id +"\"><h1 id=\"section_" + id + "\" ><span class=\"ph autonumber\">")
-              currentTitle.subpartFile.write(content.encode("utf-8") + "</span></h1>\n")
-        elif self.CurrentData == "CITA":
-          if content != "\n":
-            if currentTitle.hasSubPartFile == "Y" :
-              currentTitle.subpartFile.write("<div id=\"citation\">" + content.encode("utf-8") + "</div>\n")
-        elif self.CurrentData == "P":
-          if currentTitle.hasSubPartFile == "Y" :
-            if content != "\n":
-              if re.search('^\([a-z]\)',content, re.MULTILINE):
-                currentTitle.subpartFile.write("&#xA0;&#xA0;&#xA0;&#xA0;")
-              if re.search('^\([0-9]\)',content, re.MULTILINE):
-                currentTitle.subpartFile.write("&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;")
-              currentTitle.subpartFile.write(content.encode("utf-8"))
         else:
-          if currentTitle.hasSubPartFile == "Y" :
-            if content != "\n":
-              currentTitle.subpartFile.write(content.encode("utf-8"))
+          if content != "\n":
+            currentTitle.content = currentTitle.content + "\n" + content
 
 # create an XMLReader
 parser = xml.sax.make_parser()
@@ -208,3 +248,8 @@ parser.setContentHandler( Handler )
 
 ## THe work is done here!!
 parser.parse(xmlFileToParse)
+
+## Cleanup
+jsonSectionFile.close()
+jsonSubPartFile.close()
+jsonSubChapterFile.close()
