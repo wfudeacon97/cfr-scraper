@@ -15,7 +15,6 @@ MEDIUM- FAR- Find and create internal links (FAR links in text)
 MEDIUM- FAR- Indentation FAR 3.502-1 definitions ("Subcontractor")
 
 MODIFY Mongo to upsert, then delete old records
-Upload all html / json to S3 after load
 
 =======================================
 ---------------------VAAR--------------
@@ -24,11 +23,9 @@ HIGH- VAAR- Add JavaScript to VAAR html
 MEDIUM- VAAR- make font same as FAR
 MEDIUM- VAAR- Find and create internal links (FAR links in text)
 
-After Deployed:
-JavaScript Hovers for all FAR links
+After Deployed:  JavaScript Hovers for all FAR links
 
 MODIFY Mongo to upsert, then delete old records
-Upload all html / json to S3 after load
 
 =======================================
 ---------------------DONE--------------
@@ -45,3 +42,6 @@ Deploy VAAR to Test-
   - (DONE) upload files to S3
   VAAR- JSON for Chapter/ SubPart
   VAAR- get Test environment working
+Upload all html / json to S3 after load
+
+Create scrapes collection, and add record for each scrape uploaded

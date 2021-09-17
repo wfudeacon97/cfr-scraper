@@ -30,14 +30,16 @@ for ch in ${chapters//,/ }; do
     echo "=====   FAR"
     echo "======================================="
     aws s3 cp s3://${bucketName}/${cfrDate}/far/mongo-chapter-1.json results/mongo-chapter-1.json  --region ${awsRegion}
+    aws s3 cp s3://${bucketName}/${cfrDate}/far/elastic-chapter-1.json results/elastic-chapter-1.json  --region ${awsRegion}
+    aws s3 cp s3://${bucketName}/${cfrDate}/far/scrape-1.json results/scrape-1.json --region ${awsRegion}
     aws s3 sync s3://${bucketName}/${cfrDate}/far/html/ html/far/  --region ${awsRegion} --exclude "*" --include "*.html" --quiet
-    #TODO: Reload Elastic json as well
 
   else
     echo "======================================="
     echo "=====   Supplement: ${agencyName} "
     echo "======================================="
     aws s3 cp s3://${bucketName}/${cfrDate}/${agencyName}/mongo-chapter-${ch}.json results/mongo-chapter-${ch}.json  --region ${awsRegion}
+    aws s3 cp s3://${bucketName}/${cfrDate}/${agencyName}/scrape-${ch}.json results/scrape-${ch}.json --region ${awsRegion}
     aws s3 sync s3://${bucketName}/${cfrDate}/${agencyName}/html/ html/${agencyName}/  --region ${awsRegion} --exclude "*" --include "*.html"  --quiet
   fi
 done
