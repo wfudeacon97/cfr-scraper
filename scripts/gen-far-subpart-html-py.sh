@@ -131,7 +131,12 @@ class CFRHandler( xml.sax.ContentHandler ):
         currentTitle.Level = "Part"
         #print "Checking end of file " + currentTitle.subpartFile.name
         if currentTitle.hasSubPartFile == "Y" :
-          currentTitle.subpartFile.write("</article></body>")
+          currentTitle.subpartFile.write("</article>")
+          currentTitle.subpartFile.write("<style type=\"text/css\">\n")
+          currentTitle.subpartFile.write("a {text-decoration: none; font-size: 16px; color: #0072ce !important;}\n")
+          currentTitle.subpartFile.write("a:hover {text-decoration: underline; color: #0072ce}\n")
+          currentTitle.subpartFile.write("body {background-color: #FFFFFF;}\n")
+          currentTitle.subpartFile.write("</style></body>")
           #print "Closing file " + currentTitle.subpartFile.name
           currentTitle.subpartFile.close()
           currentTitle.subpartFile = None

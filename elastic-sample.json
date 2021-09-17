@@ -1,0 +1,15 @@
+{"_id":"607e2de16cc7f406c109ba6a",
+  "title":" Federal Acquisition Regulation",
+  "htmlUrl":"FAR-id1617MA0B05A.html",
+  "content":"Federal Acquisition Regulation\nPart 34 - Major System Acquisition \nPart 35 - Research and Development Contracting \nPart 36 - Construction and Architect-Engineer Contracts \nPart 37 - Service Contracting \nPart 38 - Federal Supply Schedule Contracting \nPart 39 - Acquisition of Information Technology \nPart 40 - Reserved \nPart 41 - Acquisition of Utility Services ",
+  "cfrIdentifier":{"title":"48",
+                   "part":null,
+                   "subPart":null,
+                   "subTopic":null,
+                   "chapter":"F"},
+  "agencies":[{"name":"Federal Acquisition Regulation System",
+               "agencyId":539,
+               "url":"https://www.federalregister.gov/agencies/federal-acquisition-regulation-system",
+               "jsonUrl":"https://www.federalregister.gov/api/v1/agencies/539.json",
+               "slug":"federal-acquisition-regulation-system"}],
+  "type":1}

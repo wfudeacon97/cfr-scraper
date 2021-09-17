@@ -13,6 +13,7 @@ chapterToParse = sys.argv[2]
 print "   - Xml File: " + xmlFileToParse
 print "   - Chapter: " + chapterToParse
 jsonSectionFile = open("tmp/raw-section-" + chapterToParse + ".json", "a")
+jsonPartFile = open("tmp/raw-part-" + chapterToParse + ".json", "a")
 jsonSubPartFile = open("tmp/raw-subpart-" + chapterToParse + ".json", "a")
 jsonSubChapterFile = open("tmp/raw-subchapter-" + chapterToParse + ".json", "a")
 
@@ -35,35 +36,67 @@ class RawTitle():
 
 currentTitle= RawTitle()
 
-def printSectionJson(currentTitle):
+####### SubChapter- Type 1
+def printSubChapterJson(currentTitle):
   if currentTitle.ChapterNum == chapterToParse:
     jsonData = {}
     cfr = {}
     oid = {}
-    jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.PartNum + ".html#" + currentTitle.SectionNum
+    jsonData['htmlUrl'] = "#"
 
-    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.SectionNum
+    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum
 
-    type=5
-    jsonData['title'] = currentTitle.SectionStr
+    type=1
+    jsonData['title'] = currentTitle.SubChapterStr
     jsonData['noticeType'] = 1
-    jsonData['content'] = currentTitle.content
+    jsonData['content'] = ""
     jsonData['type'] = type
     jsonData['__v'] = 0
     cfr['title'] = currentTitle.TitleNum
-    cfr['part'] = currentTitle.PartNum
+    cfr['part'] = None
     cfr['chapter'] = currentTitle.SubChapterNum
-    cfr['subPart'] = currentTitle.SubPartNum
-    cfr['subTopic'] = currentTitle.SectionNum
+    cfr['subPart'] = None
+    cfr['subTopic'] = None
     oid["$oid"]= myOid
     jsonData['cfrIdentifier'] = cfr
     jsonData['_id'] = myOid
     #createdAt
     #updatedAt
     #agencies
-    jsonSectionFile.write(json.dumps(jsonData))
-    jsonSectionFile.write("\n")
+    jsonSubChapterFile.write(json.dumps(jsonData))
+    jsonSubChapterFile.write("\n")
 
+####### Part- Type 2
+def printPartJson(currentTitle):
+  if currentTitle.ChapterNum == chapterToParse:
+    jsonData = {}
+    cfr = {}
+    oid = {}
+    jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.PartNum + ".html"
+
+    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.PartNum
+
+    type=2
+    jsonData['title'] = currentTitle.SubPartStr
+    jsonData['noticeType'] = 1
+    jsonData['content'] = ""
+    jsonData['type'] = type
+    jsonData['__v'] = 0
+    cfr['title'] = currentTitle.TitleNum
+    cfr['part'] = currentTitle.PartNum
+    cfr['chapter'] = currentTitle.SubChapterNum
+    cfr['subPart'] = None
+    cfr['subTopic'] = None
+    oid["$oid"]= myOid
+    jsonData['cfrIdentifier'] = cfr
+    jsonData['_id'] = myOid
+    #createdAt
+    #updatedAt
+    #agencies
+    jsonPartFile.write(json.dumps(jsonData))
+    jsonPartFile.write("\n")
+
+####### SubPart- Type 3
 def printSubPartJson(currentTitle):
   if currentTitle.ChapterNum == chapterToParse:
     jsonData = {}
@@ -93,34 +126,35 @@ def printSubPartJson(currentTitle):
     jsonSubPartFile.write(json.dumps(jsonData))
     jsonSubPartFile.write("\n")
 
-def printSubChapterJson(currentTitle):
+### Section- Type 5
+def printSectionJson(currentTitle):
   if currentTitle.ChapterNum == chapterToParse:
     jsonData = {}
     cfr = {}
     oid = {}
-    jsonData['htmlUrl'] = "#"
+    jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.PartNum + ".html#" + currentTitle.SectionNum
 
-    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum
+    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.SectionNum
 
-    type=1
-    jsonData['title'] = currentTitle.SubChapterStr
+    type=5
+    jsonData['title'] = currentTitle.SectionStr
     jsonData['noticeType'] = 1
-    jsonData['content'] = ""
+    jsonData['content'] = currentTitle.content
     jsonData['type'] = type
     jsonData['__v'] = 0
     cfr['title'] = currentTitle.TitleNum
-    cfr['part'] = None
+    cfr['part'] = currentTitle.PartNum
     cfr['chapter'] = currentTitle.SubChapterNum
-    cfr['subPart'] = None
-    cfr['subTopic'] = None
+    cfr['subPart'] = currentTitle.SubPartNum
+    cfr['subTopic'] = currentTitle.SectionNum
     oid["$oid"]= myOid
     jsonData['cfrIdentifier'] = cfr
     jsonData['_id'] = myOid
     #createdAt
     #updatedAt
     #agencies
-    jsonSubChapterFile.write(json.dumps(jsonData))
-    jsonSubChapterFile.write("\n")
+    jsonSectionFile.write(json.dumps(jsonData))
+    jsonSectionFile.write("\n")
 
 class CFRHandler( xml.sax.ContentHandler ):
     def __init__(self):
@@ -202,6 +236,7 @@ class CFRHandler( xml.sax.ContentHandler ):
         currentTitle.Level == "Chapter"
       elif tag == "DIV5":
         currentTitle.Level == "SubChapter"
+        printPartJson (currentTitle)
       elif tag == "DIV6":
           currentTitle.Level == "Part"
           printSubPartJson (currentTitle)
@@ -251,5 +286,6 @@ parser.parse(xmlFileToParse)
 
 ## Cleanup
 jsonSectionFile.close()
+jsonPartFile.close()
 jsonSubPartFile.close()
 jsonSubChapterFile.close()

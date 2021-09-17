@@ -10,6 +10,8 @@ fi
 cfrDate=$1
 environment=$2
 chapters=$3
+#Used in generating the Mongo Records
+DATE=$(date -u +'%FT%TZ')
 
 if [ "${environment}" == "test" ] || [ "${environment}" == "Test" ] || [ "${environment}" == "TEST" ]; then
   echo "Uploading to ${environment}"
@@ -52,16 +54,28 @@ for ch in ${chapters//,/ }; do
   done
   getNameForChapter ${ch}
   if [ "${ch}" != "1" ] && [ "${upload}" == "Y" ]; then
+    #==================================================#
+    ### Remove and reinsert  Mongo records
+    ### - Uses:
+    ###      - results/mongo-chapter-${ch}.json
+    #==================================================#
     echo " - Upload mongo records for ${agencyName}"
     mongo $url --username=$user --password=$pswd --quiet --eval "DBQuery.shellBatchSize = 10000; db.federaldocuments.deleteMany({\"agencies.agencyId\" : ${agencyId}})" | tail +6
     mongoimport -u $user  -p $pswd -d ${dbName} -c ${collectionName} --uri ${url} < results/mongo-chapter-${ch}.json
 
-    # Remove old html for that directory in S3
+    cat results/scrape-${ch}.json | jq --arg DATE "$DATE"  '.uploadedAt += {"$date": $DATE}' -c > tmp/scrape-${ch}.json
+    mongoimport -u $user  -p $pswd -d ${dbName} -c ${scraperCollectionName} --uri ${url} < tmp/scrape-${ch}.json
+
+    #==================================================#
+    ### Remove old html records
+    #==================================================#
     echo "- Remove old html for ${agencyName}"
     echo "aws s3 rm s3://${bucketName}/${agencyName}/ --region ${awsRegion}"
     aws s3 rm s3://${bucketName}/${agencyName}/ --region ${awsRegion}
 
-    #Upload new S3 files
+    #==================================================#
+    ### Upload new html records
+    #==================================================#
     echo "- Upload html to s3://${bucketName}/${agencyName}/ for ${agencyName}"
     echo "aws s3 sync html/${agencyName}/ s3://${bucketName}/${agencyName}/ --region ${awsRegion}"
     aws s3 sync html/${agencyName}/ s3://${bucketName}/${agencyName}/ --region ${awsRegion}
@@ -89,6 +103,77 @@ for ch in ${chapters//,/ }; do
       echo "=====   Upload FAR (agencyId: ${agencyId})"
       echo "======================================="
       echo " - TODO: Finish upload of FAR artifacts"
+      #==================================================#
+      ### Remove and reinsert  Mongo records
+      ### - Uses:
+      ###      - results/mongo-chapter-${ch}.json
+      #==================================================#
+      echo " - TODO: Upload mongo records for ${agencyName}"
+      mongo $url --username=$user --password=$pswd --quiet --eval "DBQuery.shellBatchSize = 10000; db.federaldocuments.deleteMany({\"agencies.agencyId\" : ${agencyId}})" | tail +6
+      mongoimport -u $user  -p $pswd -d ${dbName} -c ${collectionName} --uri ${url} < results/mongo-chapter-${ch}.json
+
+      cat results/scrape-${ch}.json | jq --arg DATE "$DATE"  '.uploadedAt += {"$date": $DATE}' -c > tmp/scrape-${ch}.json
+      mongoimport -u $user  -p $pswd -d ${dbName} -c ${scraperCollectionName} --uri ${url} < tmp/scrape-${ch}.json
+      
+      #==================================================#
+      ### Remove old html records
+      #==================================================#
+      echo "- TODO: Remove old html for ${agencyName}"
+      echo "aws s3 rm s3://${bucketName}/${agencyName}/ --region ${awsRegion}"
+      aws s3 rm s3://${bucketName}/${agencyName}/ --region ${awsRegion}
+
+      #==================================================#
+      ### Upload new html records
+      #==================================================#
+      echo "- TODO: Upload html to s3://${bucketName}/${agencyName}/ for ${agencyName}"
+      echo "aws s3 sync html/${agencyName}/ s3://${bucketName}/${agencyName}/ --region ${awsRegion}"
+      aws s3 sync html/${agencyName}/ s3://${bucketName}/${agencyName}/ --region ${awsRegion}
+
+      #==================================================#
+      ### Upload Elastic
+      ### - Uses:
+      ###      - results/elastic-chapter-${ch}.json
+      #==================================================#
+      if [ "${indexName}" != "" ] && [ -f results/elastic-chapter-${ch}.json ]; then
+
+          echo "- TODO: indexName=${indexName}"
+          #==================================================#
+          ### Delete prior Elastic indexed docments
+          #==================================================#
+          echo "- TODO: Remove old indexed documents from Elastic for ${agencyName}"
+          curl -s -XPOST "https://search-far-elasticsearch-xqucmrm5ng7d43q55be2rk7hm4.us-east-2.es.amazonaws.com/${indexName}/_delete_by_query?conflicts=proceed&pretty" -H 'Content-Type: application/json' -d'{ "query": { "match_all": {} } }'
+
+          # Confirm 0 indexed docments
+          curl -s https://search-far-elasticsearch-xqucmrm5ng7d43q55be2rk7hm4.us-east-2.es.amazonaws.com:443/${indexName}/_stats?pretty | jq '._all.primaries.docs'
+
+          #==================================================#
+          ### Upload new Elastic indexed docments
+          #==================================================#
+          echo "- TODO: Upload new indexed documents from Elastic for ${agencyName}"
+          idx=0
+          while read j; do
+            idx=$((idx+1))
+
+            request=$(echo $j | jq 'del(._id)' -c)
+            id=$(echo $j | jq '"\(._id)"' -r)
+            output=$(curl -s -X PUT  https://search-far-elasticsearch-xqucmrm5ng7d43q55be2rk7hm4.us-east-2.es.amazonaws.com:443/${indexName}/_doc/${id} -H 'Content-Type: application/json' -d "$request")
+            status=$?
+
+            if [ "$status" != "0" ] ; then
+              echo "Problem on line: ${idx}: ${id}"
+            fi
+          done < <(cat results/elastic-chapter-${ch}.json | jq '.' -c  )
+
+          echo "Completed Sending to Elastic: $(date)"
+
+          #==================================================#
+          ### Confirm Indexed Documents prior Elastic indexed docments
+          #==================================================#
+          echo "- TODO: Total documents indexed: $(curl -s https://search-far-elasticsearch-xqucmrm5ng7d43q55be2rk7hm4.us-east-2.es.amazonaws.com:443/${indexName}/_stats?pretty | jq '._all.primaries.docs')"
+      else
+        echo "load-scrape-to-environment.sh-... skipping Elastic Upload"
+      fi
+
       echo "======================================="
     else
       echo " - Skipping upload of chapter: ${ch} (${agencyName}) because it was not included in upload list ${chapters}"

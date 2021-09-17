@@ -25,6 +25,8 @@ for ch in ${chapters//,/ }; do
     echo "=====   FAR"
     echo "======================================="
     aws s3 cp results/mongo-chapter-1.json s3://${bucketName}/${cfrDate}/far/mongo-chapter-1.json --region ${awsRegion}
+    aws s3 cp results/elastic-chapter-1.json s3://${bucketName}/${cfrDate}/far/elastic-chapter-1.json  --region ${awsRegion}
+    aws s3 cp results/scrape-1.json s3://${bucketName}/${cfrDate}/far/scrape-1.json  --region ${awsRegion}
     aws s3 sync html/far/ s3://${bucketName}/${cfrDate}/far/html/ --region ${awsRegion} --exclude "*" --include "*.html"
     #TODO: Upload Elastic json as well
 
@@ -33,6 +35,7 @@ for ch in ${chapters//,/ }; do
     echo "=====   Supplement: ${agencyName} "
     echo "======================================="
     aws s3 cp results/mongo-chapter-${ch}.json s3://${bucketName}/${cfrDate}/${agencyName}/mongo-chapter-${ch}.json --region ${awsRegion}
+    aws s3 cp results/scrape-${ch}.json s3://${bucketName}/${cfrDate}/${agencyName}/scrape-${ch}.json  --region ${awsRegion}
     aws s3 sync html/${agencyName}/ s3://${bucketName}/${cfrDate}/${agencyName}/html/ --region ${awsRegion} --exclude "*" --include "*.html"
   fi
 done
