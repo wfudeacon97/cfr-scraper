@@ -9,7 +9,7 @@ cfrDate=$1
 awsRegion=us-east-2
 bucketName=cfr-scraper
 source scripts/functions.sh
-echo "Reloading scrape from  ${cfrDate}}"
+echo "Reloading scrape from  ${cfrDate}"
 
 ./reset.sh
 

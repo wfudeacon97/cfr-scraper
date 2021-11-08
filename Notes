@@ -1,0 +1,7 @@
+Home page:
+  - Grid- pulled from JSON, type 2 (Part)- Div6.
+      They need the Title to be ordered correctly (in cases where there is no div6, between the Div5 and Div8, then we have to default the title for this grid to sort correctly)
+      this is rendered as the "parts grid"
+  - Expandable list- pulled from JSON / Mongo, type 2
+      The Title must start with 'SubChapter'
+      see web/src/home-page/subchapter-list.tsx

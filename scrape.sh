@@ -73,7 +73,7 @@ if [ "${includeFAR}" == "Y" ] ; then
   ###      - tmp/raw-section-1.json
   #==================================================#
   echo " - Generate json for Mongo for FAR"
-  ./scripts/gen-rawjson-py.sh tmp/raw-${dt}.xml ${ch}
+  ./scripts/gen-rawjson-far-py.sh tmp/raw-${dt}.xml ${ch}
   echo "   - Results:"
   echo "       - SubChapters (type=1): $(cat tmp/raw-subchapter-${ch}.json | jq . -c | wc -l)"
   echo "       - Parts (type=2): $(cat tmp/raw-part-${ch}.json | jq . -c | wc -l)"
@@ -156,8 +156,12 @@ if [ "${includeFAR}" == "Y" ] ; then
   ###      - html/${agencyName}/*.html
   #==================================================#
   echo " - Generate html for FAR"
-  ./scripts/gen-far-subpart-html-py.sh tmp/raw-${dt}.xml html/far 1
+  #Div4
+  ./scripts/gen-far-subchapter-html-py.sh tmp/raw-${dt}.xml html/far 1
+  #Div5
   ./scripts/gen-far-part-html-py.sh tmp/raw-${dt}.xml html/far 1
+  #Div6
+  ./scripts/gen-far-subpart-html-py.sh tmp/raw-${dt}.xml html/far 1
 
   echo "    - Total files $(ls -Al html/far/ | tail +2 | wc -l)"
   echo "======================================="
@@ -188,7 +192,7 @@ for ch in ${chapters//,/ }; do
     echo "=====   ${agencyDisplayname} (agencyId: ${agencyId})"
     echo "======================================="
     echo " - Generate json for Mongo/ Elastic"
-    ./scripts/gen-rawjson-py.sh tmp/raw-${dt}.xml ${ch}
+    ./scripts/gen-rawjson-suppl-py.sh tmp/raw-${dt}.xml ${ch}
     echo "   - Results: "
     echo "        - SubChapters: $(cat tmp/raw-subchapter-${ch}.json | jq . -c | wc -l)"
     echo "        - Parts: $(cat tmp/raw-part-${ch}.json | jq . -c | wc -l)"
@@ -203,23 +207,23 @@ for ch in ${chapters//,/ }; do
     ##    - Add the createdAt and updatedAt fields
     ##    - Add the Agency field from the agencies/ folder
     #==================================================#
-    ## Type 1
-    cat tmp/raw-subchapter-${ch}.json |
-      jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
-      jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
-      jq --arg DATE "$DATE"  '.updatedAt += {"$date": $DATE}' -c |
-      jq 'del(.content )' | \
-      jq '. + {content: ""}' -c  \
-      > results/mongo-chapter-${ch}.json
+    ## Type 1-
+    #cat tmp/raw-subchapter-${ch}.json |
+    #  jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
+    #  jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
+    #  jq --arg DATE "$DATE"  '.updatedAt += {"$date": $DATE}' -c |
+    #  jq 'del(.content )' | \
+    #  jq '. + {content: ""}' -c  \
+    #  > results/mongo-chapter-${ch}.json
 
-    ## Type 2
-    cat tmp/raw-part-${ch}.json |
-      jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
-      jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
-      jq --arg DATE "$DATE"  '.updatedAt += {"$date": $DATE}' -c |
-      jq 'del(.content )' | \
-      jq '. + {content: ""}' -c  \
-      >> results/mongo-chapter-${ch}.json
+    ## Type 2-  Removing this, because it breaks the expandable chapter list on the first page
+    #cat tmp/raw-part-${ch}.json |
+    #  jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
+    #  jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
+    #  jq --arg DATE "$DATE"  '.updatedAt += {"$date": $DATE}' -c |
+    #  jq 'del(.content )' | \
+    #  jq '. + {content: ""}' -c  \
+    #  >> results/mongo-chapter-${ch}.json
 
     ## Type 3
     cat tmp/raw-subpart-${ch}.json |
@@ -254,6 +258,9 @@ for ch in ${chapters//,/ }; do
     echo "   - Generating HTML Bottom"
     ./scripts/gen-supplement-part-html-bottom-py.sh tmp/raw-${dt}.xml  html/${agencyName} ${ch}
     echo "    - Total files $(ls -Al html/${agencyName}/ | tail +2 | wc -l)"
+
+    echo " - Update citations to internal links"
+    ./replaceCitation-far.sh
 
     echo "======================================="
     echo ""

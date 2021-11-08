@@ -1,26 +1,62 @@
+
+Commit changes to Application
+
+Record to Mongo about scrape (chapter, scrape date, install date, git commit hash, FAR file hash)
+
+Internal links on VAAR pages(?) - will hover over look funny?
+Lifecycle policy's in cfr-scraper S3 bucket (or zip the data package)
+
+TODO Internal Link generation patterns:
+  (see 25.1101(a), 25.1101(b), or 25.1102)
+  under subsection 25.702-2
+  (see 25.105(b)(2)) (Example in 25.504-1 )
+  # Check out why some greps have no file name!!
+
+LOW- FAR- Indentation FAR 3.502-1 definitions ("Subcontractor")
+
 =======================================
 ---------------------FAR--------------
 =======================================
-HIGH- FAR- Subpart html- add links @each SubPart/ Section
-HIGH- FAR- Add JavaScript to FAR html
+Internal Link Generation:
+      25.502(a)  (example in 25.504-1)  (TODO: This could be a subset of D or E)
+      (see 15.101-1) (example in 15.305) (DONE)
+      (see Subpart 25.4) (example in 25.502) (DONE)
+      in accordance with Subpart 25.7 (example in 25.501) (DONE)
+      in accordance with 25.502 (example in 25.503) (DONE)
+      provided in 25.105  (example in 25.502) (DONE)
+      (see 25.504-4, Example 2) (example in 25.503) (DONE)
+
+      in 25.502(a) (DONE)
+      (see 25.502(c)(4)(ii)) (Example in 25.504-1) (DONE)
+      of 52.225-9 (DONE - O)
+      at 52.225-9 (DONE - O)
+      or 52.225-9 (DONE - O)
+      either 52.225-9 (DONE -P)
+      in subpart 25.5 (example in 25.101) (DONE- Q)
+      at Subpart 25.5 (DONE- Q)
+      see Subpart 25.6 (DONE- R)
+      under Subpart 25.4 (DONE- S)
+      at 25.104(a) (DONE - U)
+      under 25.202(a) (DONE - T)
+      in 25.104 (DONE - U)
+      at 25.103 (example in 25.101 )(DONE - U)
+      in 1.201-1 (DONE V)
+Test hover-over in FAR docs- seems to be going to top of doc, not '#' (Go to Part 31, and hover over a link)
+FAR= Part 31 links (with no Div6), needs:
+  - json- update html ref
+  - Subpart html
+HIGH- FAR- Add JavaScript to FAR html (necessary?)
 HIGH- FAR- compare Json
-HIGH- FAR- Html for Part (type-2)
-HIGH- FAR- deploy to test
-  - Setup reset (S3/ Mongo records to revert back to old)
-  - Mongo insert
-  - Elastic
-  - html -> S3
 
 MEDIUM- FAR- Find and create internal links (FAR links in text)
-MEDIUM- FAR- Indentation FAR 3.502-1 definitions ("Subcontractor")
 
 MODIFY Mongo to upsert, then delete old records
 
 =======================================
 ---------------------VAAR--------------
 =======================================
-HIGH- VAAR- Add JavaScript to VAAR html
-MEDIUM- VAAR- make font same as FAR
+VAAR- Right hand links should link to # target not top of page
+HIGH- VAAR- Add JavaScript to VAAR html (necessary?)
 MEDIUM- VAAR- Find and create internal links (FAR links in text)
 
 After Deployed:  JavaScript Hovers for all FAR links
@@ -30,7 +66,29 @@ MODIFY Mongo to upsert, then delete old records
 =======================================
 ---------------------DONE--------------
 =======================================
+HIGH- FAR- Subpart html- add links @each SubPart/ Section
+HIGH- FAR- Html for Part (type-2)
+HIGH- FAR- deploy to test
+  - Setup reset (S3/ Mongo records to revert back to old)
+  - Mongo insert
+  - Elastic
+  - html -> S3
 
+MEDIUM- VAAR- make font same as FAR
+Fix table of contents on home page-
+  Generate html for chapter (Div4)
+FAR Part 31- check links from Part 31 -> Part 3 html
+Section 20/21- (hyphenated Parts)- need:
+  - Subpart (type3) json
+  - html
+Home Page Table of contents (expandable list):
+  Part 10- title
+  call title() t remove the Uppercase Parts
+Fix Grid on Home pages
+Fix Type 2 records to not include 50-99
+Links in left Table of Contents- FAR
+Fix font in HTML to match website
+Upload both FAR and VAAR scrapes to Test
 MEDIUM- VAAR- Table Header line breaks (missing spaces)- see VAAR 801.106
 HIGH- VAAR- Use Table at top of VAAR page for formatting
 HIGH- VAAR- Add Subparts at top of VAAR

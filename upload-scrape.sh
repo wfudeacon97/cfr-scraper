@@ -27,7 +27,7 @@ for ch in ${chapters//,/ }; do
     aws s3 cp results/mongo-chapter-1.json s3://${bucketName}/${cfrDate}/far/mongo-chapter-1.json --region ${awsRegion}
     aws s3 cp results/elastic-chapter-1.json s3://${bucketName}/${cfrDate}/far/elastic-chapter-1.json  --region ${awsRegion}
     aws s3 cp results/scrape-1.json s3://${bucketName}/${cfrDate}/far/scrape-1.json  --region ${awsRegion}
-    aws s3 sync html/far/ s3://${bucketName}/${cfrDate}/far/html/ --region ${awsRegion} --exclude "*" --include "*.html"
+    aws s3 sync html/far/ s3://${bucketName}/${cfrDate}/far/html/ --region ${awsRegion} --exclude "*" --include "*.html" --quiet
     #TODO: Upload Elastic json as well
 
   else
@@ -36,7 +36,7 @@ for ch in ${chapters//,/ }; do
     echo "======================================="
     aws s3 cp results/mongo-chapter-${ch}.json s3://${bucketName}/${cfrDate}/${agencyName}/mongo-chapter-${ch}.json --region ${awsRegion}
     aws s3 cp results/scrape-${ch}.json s3://${bucketName}/${cfrDate}/${agencyName}/scrape-${ch}.json  --region ${awsRegion}
-    aws s3 sync html/${agencyName}/ s3://${bucketName}/${cfrDate}/${agencyName}/html/ --region ${awsRegion} --exclude "*" --include "*.html"
+    aws s3 sync html/${agencyName}/ s3://${bucketName}/${cfrDate}/${agencyName}/html/ --region ${awsRegion} --exclude "*" --include "*.html" --quiet
   fi
 done
 

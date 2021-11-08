@@ -150,7 +150,7 @@ class CFRHandler( xml.sax.ContentHandler ):
           currentTitle.partFile.write("<style type=\"text/css\">\n")
           currentTitle.partFile.write("a {text-decoration: none; font-size: 16px; color: #0072ce !important;}\n")
           currentTitle.partFile.write("a:hover {text-decoration: underline; color: #0072ce}\n")
-          currentTitle.partFile.write("body {background-color: #FFFFFF;}\n")
+          currentTitle.partFile.write("body {background-color: #FFFFFF; font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;}\n")
           currentTitle.partFile.write("</style>")
           currentTitle.partFile.write("</body>")
           currentTitle.partFile.close()

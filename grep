@@ -1,0 +1,32 @@
+grep -i  "[0-9]* CFR PART [0-9]*" 48.1.52.2.html
+
+cp far//48.1.52.2.html .
+sed -i '' "s|[0-9]* CFR PART [0-9]*|<a href="X">&</a>|gI" 48.1.52.2.html
+grep -i  "[0-9]* CFR PART [0-9]*" 48.1.52.2.html
+
+
+
+
+matches:
+grep -iro  "\b48 CFR PART [0-9][0-9]\b" html/far/   | uniq -u
+grep -iro "\bFAR [0-9]*.[0-9]*\b " html/far/ | uniq -u
+
+#(see 25.401(a)(5))
+grep -iroh "(see [0-9]*.[0-9]*)" far/ | uniq -u
+grep -iroh "(see [0-9]*.[0-9]*([a-z]*))" far/ | uniq -u
+grep -iroh "(see [0-9]*.[0-9]*([a-z]*)([0-9]*))" far/ | uniq -u
+
+
+### TODO:
+### These are mostly in the Part 9903
+grep -irh "(see 48 CFR [0-9]*" far/ | uniq -u
+
+
+
+IFS=$'\n'
+for i in $(grep -iro  "\b48 CFR PART [0-9][0-9]\b" ./*.html  | uniq -u); do
+  filename=$(echo $i | cut -d: -f1)
+  string=$(echo $i | cut -d: -f2)
+  echo "Replacing ${string} in file ${filename}"
+  sed -i .bak "s|$string|<a href=\"X\">$string</a>|gI" ${filename}
+done
