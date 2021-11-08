@@ -6,7 +6,10 @@ import re
 if (len(sys.argv) -1) != 3:
   print 'ERROR: Expecting the following arguments: [xml_file] [html_dir] [Title#]'
   quit(1)
-
+fileCount = 0
+def newFile(count):
+  global fileCount
+  fileCount+=count
 #"tmp/raw-2021-08-24.xml"
 xmlFileToParse = sys.argv[1]
 htmlFolder = sys.argv[2]
@@ -33,6 +36,8 @@ class RawTitle():
       self.SectionStr = ""
       self.subpartFile = None
       self.hasSubPartFile = "N"
+      self.subpart0File = None
+      self.hasSubPart0File = "N"
 
 currentTitle= RawTitle()
 
@@ -97,6 +102,7 @@ class CFRHandler( xml.sax.ContentHandler ):
          currentTitle.SubPartNum = attributes["N"]
          if currentTitle.ChapterNum == chapterToParse:
            subpartFileName=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.SubPartNum
+           newFile(1)
            currentTitle.subpartFile = open(htmlFolder + "/" +subpartFileName + ".html", "a")
            currentTitle.subpartFile.write("<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
            currentTitle.hasSubPartFile = "Y"
@@ -106,6 +112,15 @@ class CFRHandler( xml.sax.ContentHandler ):
          currentTitle.Level = "Section"
          currentTitle.SectionStr = ""
          currentTitle.SectionNum = attributes["N"]
+         if currentTitle.ChapterNum == chapterToParse:
+            # This can happen for SubPart 0 in each Part... there is no DIV6 before the Div8
+            if currentTitle.SubPartNum == "":
+              subpart0FileName=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.PartNum
+              newFile(1)
+              currentTitle.subpart0File = open(htmlFolder + "/" +subpart0FileName + ".0.html", "a")
+              currentTitle.subpart0File.write("<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
+              currentTitle.hasSubPart0File = "Y"
+
       elif tag == "P":
          if currentTitle.Level == "Section":
             if currentTitle.hasSubPartFile == "Y" :
@@ -135,24 +150,41 @@ class CFRHandler( xml.sax.ContentHandler ):
           currentTitle.subpartFile.write("<style type=\"text/css\">\n")
           currentTitle.subpartFile.write("a {text-decoration: none; font-size: 16px; color: #0072ce !important;}\n")
           currentTitle.subpartFile.write("a:hover {text-decoration: underline; color: #0072ce}\n")
-          currentTitle.subpartFile.write("body {background-color: #FFFFFF;}\n")
+          currentTitle.subpartFile.write("body {background-color: #FFFFFF; font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;}\n")
           currentTitle.subpartFile.write("</style></body>")
           #print "Closing file " + currentTitle.subpartFile.name
           currentTitle.subpartFile.close()
           currentTitle.subpartFile = None
           currentTitle.hasSubPartFile = "N"
+        if currentTitle.hasSubPart0File == "Y" :
+          currentTitle.subpart0File.write("</article>")
+          currentTitle.subpart0File.write("<style type=\"text/css\">\n")
+          currentTitle.subpart0File.write("a {text-decoration: none; font-size: 16px; color: #0072ce !important;}\n")
+          currentTitle.subpart0File.write("a:hover {text-decoration: underline; color: #0072ce}\n")
+          currentTitle.subpart0File.write("body {background-color: #FFFFFF; font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;}\n")
+          currentTitle.subpart0File.write("</style></body>")
+          #print "Closing file " + currentTitle.subpart0File.name
+          currentTitle.subpart0File.close()
+          currentTitle.subpart0File = None
+          currentTitle.hasSubPart0File = "N"
       elif tag == "DIV8":
         currentTitle.Level = "SubPart"
         if currentTitle.hasSubPartFile == "Y" :
           currentTitle.subpartFile.write("</article>\n")
+        elif currentTitle.hasSubPart0File == "Y" :
+          currentTitle.subpart0File.write("</article>\n")
       elif tag == "P":
         if currentTitle.Level == "Section":
           if currentTitle.hasSubPartFile == "Y" :
             currentTitle.subpartFile.write("</p>\n")
+          elif currentTitle.hasSubPart0File == "Y" :
+            currentTitle.subpart0File.write("</p>\n")
       elif self.CurrentData == "I":
         if currentTitle.Level == "Section":
           if currentTitle.hasSubPartFile == "Y" :
             currentTitle.subpartFile.write("</i>")
+          elif currentTitle.hasSubPart0File == "Y" :
+            currentTitle.subpart0File.write("</i>")
 
     # Call when a character is read
     def characters(self, content):
@@ -179,7 +211,7 @@ class CFRHandler( xml.sax.ContentHandler ):
             if currentTitle.hasSubPartFile == "Y" :
               currentTitle.subpartFile.write("\n<title>" + content.encode("utf-8") + "</title></head>\n<body>\n")
               id=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubPartNum
-              currentTitle.subpartFile.write("<article id=\"" + id +"\"><h1 id=\"subpart_" + id + "\" style=\"text-align:center;\"><span class=\"ph autonumber\">" + content.encode("utf-8") + "</span></h1>\n")
+              currentTitle.subpartFile.write("<article id=\"" + id +"\"><br/><h1 id=\"subpart_" + id + "\" style=\"text-align:center;\"><span class=\"ph autonumber\">" + content.encode("utf-8") + "</span></h1>\n")
       elif currentTitle.Level == "Section":
         if self.CurrentData == "HEAD":
           if content != "\n":
@@ -187,12 +219,20 @@ class CFRHandler( xml.sax.ContentHandler ):
             if currentTitle.hasSubPartFile == "Y" :
               #print "<article id=\"" + currentTitle.TitleNum + "." + currentTitle.ChapterNum "." + currentTitle.SectionNum +"\"><h1 id=\"Section_Hdr\" id=\"ariaid-title1\"><span class=\"ph autonumber\">" + content.encode("utf-8") + "</span></h1>\n"
               id=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SectionNum
-              currentTitle.subpartFile.write("<article id=\"" + id +"\"><h1 id=\"section_" + id + "\" ><span class=\"ph autonumber\">")
+              currentTitle.subpartFile.write("<article id=\"" + id +"\"><br/><h1 id=\"section_" + id + "\" ><span class=\"ph autonumber\">")
               currentTitle.subpartFile.write(content.encode("utf-8") + "</span></h1>\n")
+
+            elif currentTitle.hasSubPart0File == "Y" :
+              #print "<article id=\"" + currentTitle.TitleNum + "." + currentTitle.ChapterNum "." + currentTitle.SectionNum +"\"><h1 id=\"Section_Hdr\" id=\"ariaid-title1\"><span class=\"ph autonumber\">" + content.encode("utf-8") + "</span></h1>\n"
+              id=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SectionNum
+              currentTitle.subpart0File.write("<article id=\"" + id +"\"><br/><h1 id=\"section_" + id + "\" ><span class=\"ph autonumber\">")
+              currentTitle.subpart0File.write(content.encode("utf-8") + "</span></h1>\n")
         elif self.CurrentData == "CITA":
           if content != "\n":
             if currentTitle.hasSubPartFile == "Y" :
               currentTitle.subpartFile.write("<div id=\"citation\">" + content.encode("utf-8") + "</div>\n")
+            if currentTitle.hasSubPart0File == "Y" :
+              currentTitle.subpart0File.write("<div id=\"citation\">" + content.encode("utf-8") + "</div>\n")
         elif self.CurrentData == "P":
           if currentTitle.hasSubPartFile == "Y" :
             if content != "\n":
@@ -201,10 +241,20 @@ class CFRHandler( xml.sax.ContentHandler ):
               if re.search('^\([0-9]\)',content, re.MULTILINE):
                 currentTitle.subpartFile.write("&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;")
               currentTitle.subpartFile.write(content.encode("utf-8"))
+          elif currentTitle.hasSubPart0File == "Y" :
+            if content != "\n":
+              if re.search('^\([a-z]\)',content, re.MULTILINE):
+                currentTitle.subpart0File.write("&#xA0;&#xA0;&#xA0;&#xA0;")
+              if re.search('^\([0-9]\)',content, re.MULTILINE):
+                currentTitle.subpart0File.write("&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;")
+              currentTitle.subpart0File.write(content.encode("utf-8"))
         else:
           if currentTitle.hasSubPartFile == "Y" :
             if content != "\n":
               currentTitle.subpartFile.write(content.encode("utf-8"))
+          elif currentTitle.hasSubPart0File == "Y" :
+            if content != "\n":
+              currentTitle.subpart0File.write(content.encode("utf-8"))
 
 # create an XMLReader
 parser = xml.sax.make_parser()
@@ -213,4 +263,6 @@ Handler = CFRHandler()
 parser.setContentHandler( Handler )
 
 ## THe work is done here!!
+
 parser.parse(xmlFileToParse)
+print "        - Generated Files: " + str(fileCount)

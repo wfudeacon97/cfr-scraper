@@ -42,12 +42,13 @@ def printSubChapterJson(currentTitle):
     jsonData = {}
     cfr = {}
     oid = {}
-    jsonData['htmlUrl'] = "#"
+    jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + ".html"
 
     myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum
 
     type=1
-    jsonData['title'] = currentTitle.SubChapterStr
+    jsonData['title'] = "Subchapter " + currentTitle.SubChapterNum + " -" + currentTitle.SubChapterStr.split('-')[1].title()
+    #jsonData['title'] = "Federal Acquisition Regulation"
     jsonData['noticeType'] = 1
     jsonData['content'] = ""
     jsonData['type'] = type
@@ -66,18 +67,60 @@ def printSubChapterJson(currentTitle):
     jsonSubChapterFile.write(json.dumps(jsonData))
     jsonSubChapterFile.write("\n")
 
+
+####### SubPart Json for hyphenated parts- Type 3
+### Called from the print Type 2
+def createReservedJson(currentTitle, part):
+  if currentTitle.ChapterNum == chapterToParse:
+    jsonData = {}
+    cfr = {}
+    oid = {}
+    jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.PartNum + ".html"
+
+    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + part + ".0"
+
+    type=3
+    jsonData['title'] = "Subpart " + part + ".0 - Reserved"
+    jsonData['noticeType'] = 1
+    jsonData['content'] = ""
+    jsonData['type'] = type
+    jsonData['__v'] = 0
+    cfr['title'] = currentTitle.TitleNum
+    cfr['part'] = part
+    cfr['chapter'] = currentTitle.SubChapterNum
+    cfr['subPart'] = part + ".0"
+    cfr['subTopic'] = None
+    oid["$oid"]= myOid
+    jsonData['cfrIdentifier'] = cfr
+    jsonData['_id'] = myOid
+    #createdAt
+    #updatedAt
+    #agencies
+    jsonSubPartFile.write(json.dumps(jsonData))
+    jsonSubPartFile.write("\n")
+
 ####### Part- Type 2
+# These are the Part records that create the grid on the Home page
+# For this we want to exclude the last "xx-99" record
+# and we want to break up any records with hyphens:
+#  Ex.  20-21 -> a record for 20 and one for 21
 def printPartJson(currentTitle):
   if currentTitle.ChapterNum == chapterToParse:
     jsonData = {}
     cfr = {}
     oid = {}
-    jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.PartNum + ".html"
+    jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.PartNum + ".html"
 
-    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.PartNum
+    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum +  "." + currentTitle.PartNum
 
     type=2
-    jsonData['title'] = currentTitle.SubPartStr
+    # This defaults the Title, if there was no Div6, which is needed for ordering the records
+    if currentTitle.PartStr == "" :
+      jsonData['title'] = "Part " + currentTitle.PartNum
+    elif currentTitle.PartStr is None:
+      jsonData['title'] = "Part " + currentTitle.PartNum
+    else:
+      jsonData['title'] = currentTitle.PartStr.title()
     jsonData['noticeType'] = 1
     jsonData['content'] = ""
     jsonData['type'] = type
@@ -88,13 +131,35 @@ def printPartJson(currentTitle):
     cfr['subPart'] = None
     cfr['subTopic'] = None
     oid["$oid"]= myOid
-    jsonData['cfrIdentifier'] = cfr
     jsonData['_id'] = myOid
     #createdAt
     #updatedAt
     #agencies
-    jsonPartFile.write(json.dumps(jsonData))
-    jsonPartFile.write("\n")
+    if '-' in currentTitle.PartNum :
+      #  Skip the trailing sections
+      if not currentTitle.PartNum.endswith('-99'):
+        ## This section breaks up the sections like 20-21
+        start = currentTitle.PartNum.split('-')[0]
+        end = currentTitle.PartNum.split('-')[1]
+        idx=int(start)
+        while idx <= int(end):
+          cfr['part'] = str(idx)
+          jsonData['cfrIdentifier'] = cfr
+          jsonData['title'] = "Part " + str(idx) + " - Reserved"
+          myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum +  "." + str(idx)
+          oid["$oid"]= myOid
+          jsonData['_id'] = myOid
+          jsonData['cfrIdentifier'] = cfr
+          jsonPartFile.write(json.dumps(jsonData))
+          jsonPartFile.write("\n")
+          #createReservedJson(currentTitle, str(idx))
+          # The html uses the main html that says "Reserved"
+          #createReservedHtml(currentTitle)
+          idx+=1
+    else:
+      jsonData['cfrIdentifier'] = cfr
+      jsonPartFile.write(json.dumps(jsonData))
+      jsonPartFile.write("\n")
 
 ####### SubPart- Type 3
 def printSubPartJson(currentTitle):
@@ -102,9 +167,9 @@ def printSubPartJson(currentTitle):
     jsonData = {}
     cfr = {}
     oid = {}
-    jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.PartNum + ".html"
+    jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubPartNum + ".html"
 
-    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.SubPartNum
+    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubPartNum
 
     type=3
     jsonData['title'] = currentTitle.SubPartStr
@@ -132,9 +197,12 @@ def printSectionJson(currentTitle):
     jsonData = {}
     cfr = {}
     oid = {}
-    jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.PartNum + ".html#" + currentTitle.SectionNum
+    if currentTitle.SubPartNum == "":
+      jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.PartNum + ".0.html#" + currentTitle.TitleNum + "." +currentTitle.ChapterNum +"."+ currentTitle.SectionNum
+    elif currentTitle.SubPartNum != "":
+      jsonData['htmlUrl'] = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.SubPartNum + ".html#" + currentTitle.TitleNum + "." +currentTitle.ChapterNum +"."+ currentTitle.SectionNum
 
-    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SubChapterNum + "." + currentTitle.SectionNum
+    myOid = currentTitle.TitleNum + "." + currentTitle.ChapterNum +  "." + currentTitle.SectionNum
 
     type=5
     jsonData['title'] = currentTitle.SectionStr

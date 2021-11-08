@@ -7,6 +7,10 @@ if (len(sys.argv) -1) != 3:
   print 'ERROR: Expecting the following arguments: [xml_file] [html_dir] [Title#]'
   quit(1)
 
+fileCount = 0
+def newFile(count):
+  global fileCount
+  fileCount+=count
 xmlFileToParse = sys.argv[1]
 htmlFolder = sys.argv[2]
 chapterToParse = sys.argv[3]
@@ -90,6 +94,7 @@ class CFRHandler( xml.sax.ContentHandler ):
          currentTitle.SectionStr = ""
          currentTitle.PartNum = attributes["N"]
          if currentTitle.ChapterNum == chapterToParse:
+           newFile(1)
            currentTitle.partFile = open(htmlFolder + "/" +currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.PartNum + ".html", "a")
            currentTitle.partFile.write("<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
            currentTitle.hasPartFile = "Y"
@@ -117,7 +122,7 @@ class CFRHandler( xml.sax.ContentHandler ):
           currentTitle.partFile.write("<style type=\"text/css\">\n")
           currentTitle.partFile.write("a {text-decoration: none; font-size: 16px; color: #0072ce !important;}\n")
           currentTitle.partFile.write("a:hover {text-decoration: underline; color: #0072ce}\n")
-          currentTitle.partFile.write("body {background-color: #FFFFFF;}\n")
+          currentTitle.partFile.write("body {background-color: #FFFFFF; font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;}\n")
           currentTitle.partFile.write("</style>")
           currentTitle.partFile.write("</body>")
           #print "Closing file " + currentTitle.partFile.name
@@ -185,10 +190,15 @@ class CFRHandler( xml.sax.ContentHandler ):
                 #if currentTitle.PartNum == "3":
                 #  print "   - is hyphen"
               id=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SectionNum
-              subpartFileName=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.SubPartNum
+              if currentTitle.SubPartNum == "" :
+                #Section 31.000 problem is happening here
+                # This handles the case where there is a Div6, but no parent Div5
+                subpartFileName=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.PartNum + ".0"
+              else:
+                subpartFileName=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.SubPartNum
               link=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.SectionNum
               currentTitle.partFile.write("<article id=\"" + id +"\"><h1 id=\"section_"+ id +"\" style=\"margin-left: "+str(indent)+"px\"><span class=\"ph autonumber\">")
-              currentTitle.partFile.write("<a href=\"" + subpartFileName + ".html"+link +"\">")
+              currentTitle.partFile.write("<a href=\"" + subpartFileName + ".html#"+link +"\">")
               currentTitle.partFile.write(content.encode("utf-8") + "</span></h1>\n")
         #else:
         #  if currentTitle.hasPartFile == "Y" :
@@ -203,3 +213,4 @@ parser.setContentHandler( Handler )
 
 ## THe work is done here!!
 parser.parse(xmlFileToParse)
+print "        - Generated Files: " + str(fileCount)
