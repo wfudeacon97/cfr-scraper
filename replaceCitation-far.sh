@@ -576,6 +576,33 @@ while read i; do
   echo "" >> ${scriptFile}
 done < <(grep -iro --color=never -e "\bin [0-9]*\.[0-9]*-[0-9]*\b"  html/${agencyName}/*.html | sort | uniq )
 
+#under subsection 25.702-2
+while read i; do
+  echo "# ($i)" >> ${scriptFile}
+  filename=""
+  filename=$(cut -d: -f1 <<< "$i")
+  if [ "${filename}" != "${i}" ] ; then
+    txt=${i/${filename}:/}
+    fullSection=${txt:11}
+    fullSection=$(cut -d"-" -f1 <<< "$fullSection")
+
+    part=$(cut -d. -f1 <<< "$fullSection")
+    section=$(cut -d. -f2 <<< "$fullSection")
+    if [ "${#section}" == "3" ] ; then
+      subpart=${section:0:1}
+    elif [ "${#section}" == "4" ] ; then
+      subpart=${section:0:2}
+    else
+      subpart=0
+    fi
+    echo "#W. ${txt} : fullSection: ${fullSection}, part: ${part}, subpart: ${subpart}" >> ${scriptFile}
+    echo "#W. Replacing ${txt} in file ${filename}" >> ${scriptFile}
+    echo "sed -i '' \"s|$txt|<a href=\\\"48.${ch}.${part}.${subpart}.html#48.${ch}.${fullSection}\\\">$txt</a>|gI\" ${filename}" >> ${scriptFile}
+  else
+    echo "#W. NO FILENAME" >> ${scriptFile}
+  fi
+  echo "" >> ${scriptFile}
+done < <(grep -iro --color=never -e "subsection [0-9]*\.[0-9]*-[(0-9)*]"  html/${agencyName}/*.html | sort | uniq)
 
 chmod +x ${scriptFile}
 ./${scriptFile}

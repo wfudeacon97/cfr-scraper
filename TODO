@@ -1,14 +1,11 @@
 
 Commit changes to Application
 
-Record to Mongo about scrape (chapter, scrape date, install date, git commit hash, FAR file hash)
-
 Internal links on VAAR pages(?) - will hover over look funny?
 Lifecycle policy's in cfr-scraper S3 bucket (or zip the data package)
 
 TODO Internal Link generation patterns:
   (see 25.1101(a), 25.1101(b), or 25.1102)
-  under subsection 25.702-2
   (see 25.105(b)(2)) (Example in 25.504-1 )
   # Check out why some greps have no file name!!
 
@@ -41,6 +38,7 @@ Internal Link Generation:
       in 25.104 (DONE - U)
       at 25.103 (example in 25.101 )(DONE - U)
       in 1.201-1 (DONE V)
+      under subsection 25.702-2 (DONE- W)
 Test hover-over in FAR docs- seems to be going to top of doc, not '#' (Go to Part 31, and hover over a link)
 FAR= Part 31 links (with no Div6), needs:
   - json- update html ref
@@ -66,6 +64,8 @@ MODIFY Mongo to upsert, then delete old records
 =======================================
 ---------------------DONE--------------
 =======================================
+
+Add File size/ file hash to scrape data
 HIGH- FAR- Subpart html- add links @each SubPart/ Section
 HIGH- FAR- Html for Part (type-2)
 HIGH- FAR- deploy to test
