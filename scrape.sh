@@ -53,6 +53,9 @@ else
 #  curl -X GET "https://ecfr.federalregister.gov/api/versioner/v1/full/${dt}/title-48.xml" -H "accept: application/xml" > tmp/raw-${dt}.xml
 fi
 
+## These may both be MAC specific
+fileSize=$(stat -f "%z" tmp/raw-${dt}.xml)
+fileSha=$(openssl dgst -sha256 tmp/raw-2021-11-08.xml | cut -d" " -f2)
 #==========================================#
 ############ Process FAR ###################
 #==========================================#
@@ -63,7 +66,7 @@ if [ "${includeFAR}" == "Y" ] ; then
   echo "=====   FAR: (agencyId: ${agencyId})"
   echo "======================================="
 
-  echo "{\"title\":48,\"chapter\":${ch},\"agencyName\":\"FAR\",\"cfrDate\":\"${dt}\",\"url\":\"https://www.ecfr.gov/api/versioner/v1/full/${dt}/title-48.xml\",\"gitHash\":\"$(cat tmp/git.meta)\",\"scrapeDate\":{\"\$date\": \"$DATE\"}}" > results/scrape-${ch}.json
+  echo "{\"title\":48,\"chapter\":${ch},\"agencyName\":\"FAR\",\"cfrDate\":\"${dt}\",\"url\":\"https://www.ecfr.gov/api/versioner/v1/full/${dt}/title-48.xml\",\"gitHash\":\"$(cat tmp/git.meta)\",\"scrapeDate\":{\"\$date\": \"$DATE\"},\"size\":${fileSize},\"sha\":\"${fileSha}\"}" > results/scrape-${ch}.json
 
   #==================================================#
   ### Generate Raw JSON from XML
@@ -179,7 +182,7 @@ for ch in ${chapters//,/ }; do
     getNameForChapter ${ch}
     agencyDisplayname=$(echo ${agencyName} | tr [:lower:] [:upper:])
 
-    echo "{\"title\":48,\"chapter\":${ch},\"agencyName\":\"${agencyDisplayname}\",\"cfrDate\":\"${dt}\",\"url\":\"https://www.ecfr.gov/api/versioner/v1/full/${dt}/title-48.xml\",\"gitHash\":\"$(cat tmp/git.meta)\",\"scrapeDate\":{\"\$date\": \"$DATE\"}}" > results/scrape-${ch}.json
+    echo "{\"title\":48,\"chapter\":${ch},\"agencyName\":\"${agencyDisplayname}\",\"cfrDate\":\"${dt}\",\"url\":\"https://www.ecfr.gov/api/versioner/v1/full/${dt}/title-48.xml\",\"gitHash\":\"$(cat tmp/git.meta)\",\"scrapeDate\":{\"\$date\": \"$DATE\"},\"size\":${fileSize},\"sha\":\"${fileSha}\"}" > results/scrape-${ch}.json
 
     #==================================================#
     ### Generate Raw JSON from XML

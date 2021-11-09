@@ -602,7 +602,7 @@ while read i; do
     echo "#W. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro -e "subsection [0-9]*\.[0-9]*-[(0-9)*]"  html/${agencyName}/*.html | sort | uniq)
+done < <(grep -iro --color=never -e "subsection [0-9]*\.[0-9]*-[(0-9)*]"  html/${agencyName}/*.html | sort | uniq)
 
 chmod +x ${scriptFile}
 ./${scriptFile}
