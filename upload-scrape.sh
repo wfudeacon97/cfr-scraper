@@ -6,41 +6,49 @@ bucketName=cfr-scraper
 source scripts/functions.sh
 files=N
 
-if [ -f tmp/cfr-date.meta ]; then
-  cfrDate=$(cat tmp/cfr-date.meta)
+if [ -f ${resultsDir}cfr-date.meta ]; then
+  cfrDate=$(cat ${resultsDir}cfr-date.meta)
 else
-  echo "tmp/cfr-date.meta does not exist... there is no scrape to upload"
+  echo "${resultsDir}cfr-date.meta does not exist... there is no scrape to upload"
   exit 1
 fi
-chapters=$(cat tmp/chapters.meta)
+#chapters=$(cat ${resultsDir}chapters.meta)
+echo "Available chapters are: ${chapters}"
+for i in $(ls  -d results/*/); do echo "${i/results\//}" ; done
 
 #TODO:  Do we want to prevent this if there is a previous scrape with the same cfr-date?
 aws s3 rm s3://${bucketName}/${cfrDate}/ --region ${awsRegion}
+aws s3 sync ${resultsDir} s3://${bucketName}/${cfrDate}/ --region ${awsRegion} --exclude "*" --include "*.meta"
 
-for ch in ${chapters//,/ }; do
-  getNameForChapter ${ch}
+for i in $(ls  -d results/*/); do
+  agencyDir=${i/results\//}
+  agencyName=${agencyDir/\//}
+#for ch in ${chapters//,/ }; do
+
+  supplResultsDir=${resultsDir}${agencyDir}/
   files=Y
-  if [ "${ch}" == "1" ] ; then
-    echo "======================================="
-    echo "=====   FAR"
-    echo "======================================="
-    aws s3 cp results/mongo-chapter-1.json s3://${bucketName}/${cfrDate}/far/mongo-chapter-1.json --region ${awsRegion}
-    aws s3 cp results/elastic-chapter-1.json s3://${bucketName}/${cfrDate}/far/elastic-chapter-1.json  --region ${awsRegion}
-    aws s3 cp results/scrape-1.json s3://${bucketName}/${cfrDate}/far/scrape-1.json  --region ${awsRegion}
-    aws s3 sync html/far/ s3://${bucketName}/${cfrDate}/far/html/ --region ${awsRegion} --exclude "*" --include "*.html" --quiet
-    #TODO: Upload Elastic json as well
+  echo "======================================="
+  echo "=====   Uploading: $i"
+  echo "======================================="
+  #Tar up the file
+  tar -zcf ${tmpDir}${agencyName}-${cfrDate}.tar.gz ${supplResultsDir}
+  status=$?
+  if [ "$status" == "0" ]; then
+    aws s3 rm s3://${bucketName}/${cfrDate}/${agencyDir} --region ${awsRegion}
 
+    echo "aws s3 cp ${tmpDir}${agencyName}-${cfrDate}.tar.gz s3://${bucketName}/${cfrDate}/${agencyDir} --region ${awsRegion}"
+    aws s3 cp ${tmpDir}${agencyName}-${cfrDate}.tar.gz s3://${bucketName}/${cfrDate}/${agencyDir} --region ${awsRegion}
   else
-    echo "======================================="
-    echo "=====   Supplement: ${agencyName} "
-    echo "======================================="
-    aws s3 cp results/mongo-chapter-${ch}.json s3://${bucketName}/${cfrDate}/${agencyName}/mongo-chapter-${ch}.json --region ${awsRegion}
-    aws s3 cp results/scrape-${ch}.json s3://${bucketName}/${cfrDate}/${agencyName}/scrape-${ch}.json  --region ${awsRegion}
-    aws s3 sync html/${agencyName}/ s3://${bucketName}/${cfrDate}/${agencyName}/html/ --region ${awsRegion} --exclude "*" --include "*.html" --quiet
+    echo "Failed to tar result files for ${agencyName}"
   fi
 done
 
 if [ "${files}" == "Y" ] ; then
-  aws s3 sync tmp/ s3://${bucketName}/${cfrDate} --region ${awsRegion} --exclude "*" --include "*.meta"
-  aws s3 cp tmp/raw-${cfrDate}.xml s3://${bucketName}/${cfrDate}/raw-${cfrDate}.xml --region ${awsRegion}
+  tar -zcf ${tmpDir}raw-${cfrDate}.tar.gz ${tmpDir}raw-${cfrDate}.xml
+  status=$?
+  if [ "$status" == "0" ]; then
+    aws s3 cp ${tmpDir}raw-${cfrDate}.tar.gz s3://${bucketName}/${cfrDate}/ --region ${awsRegion}
+  else
+    echo "Failed to tar raw XML file"
+  fi
 fi
