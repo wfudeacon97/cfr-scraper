@@ -13,37 +13,23 @@ echo "Reloading scrape from  ${cfrDate}"
 
 ./reset.sh
 
-aws s3 sync  s3://${bucketName}/${cfrDate} tmp/ --region ${awsRegion} --exclude "*" --include "*.meta"
+aws s3 sync  s3://${bucketName}/${cfrDate}/far/ ${resultsDir} --region ${awsRegion} --exclude "*" --include "*.meta"
 
-if [ -f tmp/chapters.meta ]; then
-  chapters=$(cat tmp/chapters.meta)
-else
-  echo "tmp/chapters.meta does not exist... there is no scrape to re-load"
-  exit 1
-fi
+for dir in $(aws s3 ls s3://${bucketName}/${cfrDate}/ --recursive --human-readable --summarize | awk '{print $5}' | grep -v meta | grep -v "raw-${cfrDate}.tar.gz"); do
 
-for ch in ${chapters//,/ }; do
-  getNameForChapter ${ch}
-  files=Y
-  if [ "${ch}" == "1" ] ; then
-    echo "======================================="
-    echo "=====   FAR"
-    echo "======================================="
-    aws s3 cp s3://${bucketName}/${cfrDate}/far/mongo-chapter-1.json results/mongo-chapter-1.json  --region ${awsRegion}
-    aws s3 cp s3://${bucketName}/${cfrDate}/far/elastic-chapter-1.json results/elastic-chapter-1.json  --region ${awsRegion}
-    aws s3 cp s3://${bucketName}/${cfrDate}/far/scrape-1.json results/scrape-1.json --region ${awsRegion}
-    aws s3 sync s3://${bucketName}/${cfrDate}/far/html/ html/far/  --region ${awsRegion} --exclude "*" --include "*.html" --quiet
+  fullFile=${dir/${cfrDate}\//}
+  agencyName=$(cut -d'/' -f1 <<< "$fullFile")
 
-  else
-    echo "======================================="
-    echo "=====   Supplement: ${agencyName} "
-    echo "======================================="
-    aws s3 cp s3://${bucketName}/${cfrDate}/${agencyName}/mongo-chapter-${ch}.json results/mongo-chapter-${ch}.json  --region ${awsRegion}
-    aws s3 cp s3://${bucketName}/${cfrDate}/${agencyName}/scrape-${ch}.json results/scrape-${ch}.json --region ${awsRegion}
-    aws s3 sync s3://${bucketName}/${cfrDate}/${agencyName}/html/ html/${agencyName}/  --region ${awsRegion} --exclude "*" --include "*.html"  --quiet
-  fi
+  echo "======================================="
+  echo "=====   ${agencyName}"
+  echo "======================================="
+  echo "Processing directory: ${dir}"
+  aws s3 cp s3://${bucketName}/${cfrDate}/${agencyName}/${agencyName}-${cfrDate}.tar.gz ${tmpDir}${agencyName}-${cfrDate}.tar.gz  --region ${awsRegion}
+
+  tar -zxf ${tmpDir}${agencyName}-${cfrDate}.tar.gz -C .
+
 done
 
-if [ "${files}" == "Y" ] ; then
-  aws s3 cp s3://${bucketName}/${cfrDate}/raw-${cfrDate}.xml tmp/raw-${cfrDate}.xml  --region ${awsRegion}
-fi
+aws s3 cp s3://${bucketName}/${cfrDate}/raw-${cfrDate}.tar.gz ${tmpDir}raw-${cfrDate}.tar.gz  --region ${awsRegion}
+tar -zxf ${tmpDir}raw-${cfrDate}.tar.gz -C .
+rm -f ${tmpDir}*.tar.gz

@@ -12,3 +12,8 @@ function getNameForChapter(){
     agencyName=$1
   fi
 }
+
+resultsDir=results/
+scriptsDir="./scripts/"
+tmpDir="tmp/"
+connectDir=connect/

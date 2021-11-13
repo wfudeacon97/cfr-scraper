@@ -3,8 +3,10 @@ source scripts/functions.sh
 ch=1
 getNameForChapter ${ch}
 
-scriptFile=tmp/replace-${agencyName}.sh
+scriptFile=${resultsDir}far/replace-${agencyName}.sh
 echo "" > ${scriptFile}
+grepOptions="-iro --color=never"
+filePattern=${resultsDir}far/html/*html
 
 while read i; do
   echo "# ($i)" >> ${scriptFile}
@@ -20,7 +22,7 @@ while read i; do
     echo "#A. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never "\b48 CFR PART [0-9][0-9]\b" html/${agencyName}/*.html  | sort | uniq )
+done < <(grep ${grepOptions} "\b48 CFR PART [0-9][0-9]\b" ${filePattern}  | sort | uniq )
 
 while read i; do
   echo "# ($i)" >> ${scriptFile}
@@ -47,7 +49,7 @@ while read i; do
     echo "#B. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never "\bFAR [0-9]*\.[0-9]*\b" html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} "\bFAR [0-9]*\.[0-9]*\b" ${filePattern} | sort | uniq )
 
 while read i; do
   echo "# ($i)" >> ${scriptFile}
@@ -78,7 +80,7 @@ while read i; do
   fi
   echo "" >> ${scriptFile}
   #fi
-done < <(grep -iro --color=never "(see [0-9]*\.[0-9]*)" html/${agencyName}/*.html | sort | uniq  )
+done < <(grep ${grepOptions} "(see [0-9]*\.[0-9]*)" ${filePattern} | sort | uniq  )
 
 while read i; do
   echo "# ($i)" >> ${scriptFile}
@@ -110,7 +112,7 @@ while read i; do
   fi
   echo "" >> ${scriptFile}
   #fi
-done < <(grep -iro --color=never "(see [0-9]*\.[0-9]*([a-z]*))" html/${agencyName}/*.html | sort | uniq)
+done < <(grep ${grepOptions} "(see [0-9]*\.[0-9]*([a-z]*))" ${filePattern} | sort | uniq)
 
 while read i; do
   echo "# ($i)" >> ${scriptFile}
@@ -139,7 +141,7 @@ while read i; do
     echo "#E. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never "(see [0-9]*\.[0-9]*([a-z]*)([0-9]*))" html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} "(see [0-9]*\.[0-9]*([a-z]*)([0-9]*))" ${filePattern} | sort | uniq )
 
 #25.502(a)  (example in 25.504-1)
 #  TODO:  This could be a subset of D or E
@@ -167,7 +169,7 @@ done < <(grep -iro --color=never "(see [0-9]*\.[0-9]*([a-z]*)([0-9]*))" html/${a
 #    echo "#F. NO FILENAME" >> ${scriptFile}
 #  fi
 #  echo "" >> ${scriptFile}
-#done < <(grep -iro --color=never "[0-9]*\.[0-9]*([a-z]*)" html/${agencyName}/*.html | sort | uniq )
+#done < <(grep ${grepOptions} "[0-9]*\.[0-9]*([a-z]*)" ${filePattern} | sort | uniq )
 
 #(see 15.101-1) (example in 15.305)
 while read i; do
@@ -196,7 +198,7 @@ while read i; do
     echo "#G. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never "\bFAR [0-9]*\.[0-9]*-[0-9]*\b " html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} "\bFAR [0-9]*\.[0-9]*-[0-9]*\b " ${filePattern} | sort | uniq )
 
 #(see Subpart 25.4)
 while read i; do
@@ -216,7 +218,7 @@ while read i; do
     echo "#H. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never "(see Subpart [0-9]*\.[0-9]*)" html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} "(see Subpart [0-9]*\.[0-9]*)" ${filePattern} | sort | uniq )
 
 #in accordance with Subpart 25.7 (example in 25.501)
 while read i; do
@@ -235,7 +237,7 @@ while read i; do
     echo "#I. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never "\bin accordance with Subpart [0-9]*\.[0-9]*\b" html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} "\bin accordance with Subpart [0-9]*\.[0-9]*\b" ${filePattern} | sort | uniq )
 
 #in accordance with 25.502 (example in 25.503)
 while read i; do
@@ -263,7 +265,7 @@ while read i; do
     echo "#J. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never "\bin accordance with [0-9]*\.[0-9]*\b" html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} "\bin accordance with [0-9]*\.[0-9]*\b" ${filePattern} | sort | uniq )
 
 #provided in 25.105  (example in 25.502)
 while read i; do
@@ -291,7 +293,7 @@ while read i; do
     echo "#K. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never "\bprovided in [0-9]*\.[0-9]*\b" html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} "\bprovided in [0-9]*\.[0-9]*\b" ${filePattern} | sort | uniq )
 
 #(see 25.504-4, Example 2) (example in 25.503)
 while read i; do
@@ -320,7 +322,7 @@ while read i; do
     echo "#L. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never "(see [0-9]*\.[0-9]*-[0-9]*, Example [0-9]*)" html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} "(see [0-9]*\.[0-9]*-[0-9]*, Example [0-9]*)" ${filePattern} | sort | uniq )
 
 #in 25.502(a)
 while read i; do
@@ -349,7 +351,7 @@ while read i; do
     echo "#M. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never "in [0-9]*\.[0-9]*([a-z])" html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} "in [0-9]*\.[0-9]*([a-z])" ${filePattern} | sort | uniq )
 
 #(see 25.502(c)(4)(ii)) (Example in 25.504-1)
 while read i; do
@@ -378,7 +380,7 @@ while read i; do
     echo "#N. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never "(see [0-9]*\.[0-9]*([a-z]*)([0-9]*)([a-z]*))" html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} "(see [0-9]*\.[0-9]*([a-z]*)([0-9]*)([a-z]*))" ${filePattern} | sort | uniq )
 
 #of 52.225-9 | at 52.225-9 | or 52.225-9
 while read i; do
@@ -407,7 +409,7 @@ while read i; do
     echo "#O. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never -e "\bof [0-9]*\.[0-9]*-[0-9]*\b" -e "\bin [0-9]*\.[0-9]*-[0-9]*\b" -e "\bat [0-9]*\.[0-9]*-[0-9]*\b" -e "\bor [0-9]*\.[0-9]*-[0-9]*\b" html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} -e "\bof [0-9]*\.[0-9]*-[0-9]*\b" -e "\bin [0-9]*\.[0-9]*-[0-9]*\b" -e "\bat [0-9]*\.[0-9]*-[0-9]*\b" -e "\bor [0-9]*\.[0-9]*-[0-9]*\b" ${filePattern} | sort | uniq )
 
 #either 52.225-9
 while read i; do
@@ -436,7 +438,7 @@ while read i; do
     echo "#P. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never -e "\beither [0-9]*\.[0-9]*-[0-9]*\b"  html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} -e "\beither [0-9]*\.[0-9]*-[0-9]*\b"  ${filePattern} | sort | uniq )
 
 #in subpart 25.5 | at Subpart 25.5
 while read i; do
@@ -454,7 +456,7 @@ while read i; do
     echo "#Q. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never -e "\bin subpart [0-9]*\.[0-9]*\b"  -e "\bat subpart [0-9]*\.[0-9]*\b" html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} -e "\bin subpart [0-9]*\.[0-9]*\b"  -e "\bat subpart [0-9]*\.[0-9]*\b" ${filePattern} | sort | uniq )
 
 #see subpart 25.5
 while read i; do
@@ -472,7 +474,7 @@ while read i; do
     echo "#R. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never -e "\bsee subpart [0-9]*\.[0-9]*\b"   html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} -e "\bsee subpart [0-9]*\.[0-9]*\b"   ${filePattern} | sort | uniq )
 
 #under subpart 25.5
 while read i; do
@@ -490,7 +492,7 @@ while read i; do
     echo "#S. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never -e "\bunder subpart [0-9]*\.[0-9]*\b"  html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} -e "\bunder subpart [0-9]*\.[0-9]*\b"  ${filePattern} | sort | uniq )
 
 #under 25.202(a)
 while read i; do
@@ -518,7 +520,7 @@ while read i; do
     echo "#T. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never -e "\bunder [0-9]*\.[0-9]*([a-z]*)\b"  html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} -e "\bunder [0-9]*\.[0-9]*([a-z]*)\b"  ${filePattern} | sort | uniq )
 
 #at 25.202(a) | in 25.202(a)
 while read i; do
@@ -546,7 +548,7 @@ while read i; do
     echo "#U. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never -e "\bat [0-9]*\.[0-9]*([a-z]*)\b" -e "\bin [0-9]*\.[0-9]*([a-z]*)\b" html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} -e "\bat [0-9]*\.[0-9]*([a-z]*)\b" -e "\bin [0-9]*\.[0-9]*([a-z]*)\b" ${filePattern} | sort | uniq )
 
 #in 1.201-1
 while read i; do
@@ -574,7 +576,7 @@ while read i; do
     echo "#V. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never -e "\bin [0-9]*\.[0-9]*-[0-9]*\b"  html/${agencyName}/*.html | sort | uniq )
+done < <(grep ${grepOptions} -e "\bin [0-9]*\.[0-9]*-[0-9]*\b"  ${filePattern} | sort | uniq )
 
 #under subsection 25.702-2
 while read i; do
@@ -602,7 +604,7 @@ while read i; do
     echo "#W. NO FILENAME" >> ${scriptFile}
   fi
   echo "" >> ${scriptFile}
-done < <(grep -iro --color=never -e "subsection [0-9]*\.[0-9]*-[(0-9)*]"  html/${agencyName}/*.html | sort | uniq)
+done < <(grep ${grepOptions} -e "subsection [0-9]*\.[0-9]*-[(0-9)*]"  ${filePattern} | sort | uniq)
 
 chmod +x ${scriptFile}
 ./${scriptFile}

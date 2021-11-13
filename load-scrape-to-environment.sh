@@ -15,7 +15,7 @@ DATE=$(date -u +'%FT%TZ')
 
 if [ "${environment}" == "test" ] || [ "${environment}" == "Test" ] || [ "${environment}" == "TEST" ]; then
   echo "Uploading to ${environment}"
-  source connect/connect-test.sh
+  source ${connectDir}connect-test.sh
 elif [ "${environment}" == "prod" ] || [ "${environment}" == "Prod" ] || [ "${environment}" == "PROD" ]; then
   echo "Uploading to ${environment} -DISABLED"
   exit 1
@@ -34,37 +34,31 @@ if [ "$result" != "0" ] ; then
   exit 1
 fi
 
-if [ -f tmp/chapters.meta ]; then
-  scrapeChapters=$(cat tmp/chapters.meta)
-else
-  echo "tmp/chapters.meta does not exist... there is no scrape to re-load"
-  exit 1
-fi
-
 #=================================================#
 ############ Upload Supplements ###################
 #=================================================#
 for ch in ${chapters//,/ }; do
   upload=N
-  ## Check that the scrapes chapter is in the list to load
-  for scrapeCh in ${scrapeChapters//,/ }; do
-    if [ "${ch}" == "${scrapeCh}" ] ; then
-      upload=Y
-    fi
-  done
   getNameForChapter ${ch}
+  ## Check that the scrapes chapter is in the list to load
+  if [ -d ${resultsDir}${agencyName} ]; then
+      upload=Y
+  else
+    echo "No scrape exists for chapter ${ch}: ${agencyName}"
+  fi
+  supplResultsDir=${resultsDir}${agencyName}/
   if [ "${ch}" != "1" ] && [ "${upload}" == "Y" ]; then
     #==================================================#
     ### Remove and reinsert  Mongo records
     ### - Uses:
-    ###      - results/mongo-chapter-${ch}.json
+    ###      - results/vaar/mongo-chapter-${ch}.json
     #==================================================#
     echo " - Upload mongo records for ${agencyName}"
     mongo $url --username=$user --password=$pswd --quiet --eval "DBQuery.shellBatchSize = 10000; db.federaldocuments.deleteMany({\"agencies.agencyId\" : ${agencyId}})" | tail +6
-    mongoimport -u $user  -p $pswd -d ${dbName} -c ${collectionName} --uri ${url} < results/mongo-chapter-${ch}.json
+    mongoimport -u $user  -p $pswd -d ${dbName} -c ${collectionName} --uri ${url} < ${supplResultsDir}mongo-chapter-${ch}.json
 
-    cat results/scrape-${ch}.json | jq --arg DATE "$DATE"  '.uploadedAt += {"$date": $DATE}' -c > tmp/scrape-${ch}.json
-    mongoimport -u $user  -p $pswd -d ${dbName} -c ${scraperCollectionName} --uri ${url} < tmp/scrape-${ch}.json
+    cat ${supplResultsDir}scrape-${ch}.json | jq --arg DATE "$DATE"  '.uploadedAt += {"$date": $DATE}' -c > ${supplResultsDir}scrape-${ch}.json
+    mongoimport -u $user  -p $pswd -d ${dbName} -c ${scraperCollectionName} --uri ${url} < ${supplResultsDir}scrape-${ch}.json
 
     #==================================================#
     ### Remove old html records
@@ -77,8 +71,8 @@ for ch in ${chapters//,/ }; do
     ### Upload new html records
     #==================================================#
     echo "- Upload html to s3://${bucketName}/${agencyName}/ for ${agencyName}"
-    echo "aws s3 sync html/${agencyName}/ s3://${bucketName}/${agencyName}/ --region ${awsRegion}"
-    aws s3 sync html/${agencyName}/ s3://${bucketName}/${agencyName}/ --region ${awsRegion} --quiet
+    echo "aws s3 sync ${supplResultsDir}html/ s3://${bucketName}/${agencyName}/ --region ${awsRegion}"
+    aws s3 sync ${supplResultsDir}html/ s3://${bucketName}/${agencyName}/ --region ${awsRegion} --quiet
   else
     echo " - Skipping upload of chapter: ${ch} (${agencyName}) because it was not included in upload list ${chapters}"
   fi
@@ -98,6 +92,7 @@ for ch in ${chapters//,/ }; do
   done
   getNameForChapter ${ch}
   if [ "${ch}" == "1" ] ; then
+    farResultsDir=${resultsDir}${agencyName}/
     if [ "${upload}" == "Y" ] ; then
       echo "======================================="
       echo "=====   Upload FAR (agencyId: ${agencyId})"
@@ -105,14 +100,14 @@ for ch in ${chapters//,/ }; do
       #==================================================#
       ### Remove and reinsert  Mongo records
       ### - Uses:
-      ###      - results/mongo-chapter-${ch}.json
+      ###      - ${farResultsDir}mongo-chapter-${ch}.json
       #==================================================#
       echo " - Upload mongo records for ${agencyName}"
       mongo $url --username=$user --password=$pswd --quiet --eval "DBQuery.shellBatchSize = 10000; db.federaldocuments.deleteMany({\"agencies.agencyId\" : ${agencyId}})" | tail +6
-      mongoimport -u $user  -p $pswd -d ${dbName} -c ${collectionName} --uri ${url} < results/mongo-chapter-${ch}.json
+      mongoimport -u $user  -p $pswd -d ${dbName} -c ${collectionName} --uri ${url} < ${farResultsDir}mongo-chapter-${ch}.json
 
-      cat results/scrape-${ch}.json | jq --arg DATE "$DATE"  '.uploadedAt += {"$date": $DATE}' -c > tmp/scrape-${ch}.json
-      mongoimport -u $user  -p $pswd -d ${dbName} -c ${scraperCollectionName} --uri ${url} < tmp/scrape-${ch}.json
+      cat ${farResultsDir}scrape-${ch}.json | jq --arg DATE "$DATE"  '.uploadedAt += {"$date": $DATE}' -c > ${farResultsDir}scrape-${ch}.json
+      mongoimport -u $user  -p $pswd -d ${dbName} -c ${scraperCollectionName} --uri ${url} < ${farResultsDir}scrape-${ch}.json
 
       #==================================================#
       ### Remove old html records
@@ -125,15 +120,15 @@ for ch in ${chapters//,/ }; do
       ### Upload new html records
       #==================================================#
       echo "- Upload html to s3://${bucketName}/${agencyName}/ for ${agencyName}"
-      echo "aws s3 sync html/${agencyName}/ s3://${bucketName}/${agencyName}/ --region ${awsRegion}"
-      aws s3 sync html/${agencyName}/ s3://${bucketName}/${agencyName}/ --region ${awsRegion} --quiet
+      echo "aws s3 sync ${farResultsDir}html/ s3://${bucketName}/${agencyName}/ --region ${awsRegion}"
+      aws s3 sync ${farResultsDir}html/ s3://${bucketName}/${agencyName}/ --region ${awsRegion} --quiet
 
       #==================================================#
       ### Upload Elastic
       ### - Uses:
       ###      - results/elastic-chapter-${ch}.json
       #==================================================#
-      if [ "${indexName}" != "" ] && [ -f results/elastic-chapter-${ch}.json ]; then
+      if [ "${indexName}" != "" ] && [ -f ${farResultsDir}elastic-chapter-${ch}.json ]; then
 
           echo "- indexName=${indexName}"
           #==================================================#
@@ -161,7 +156,7 @@ for ch in ${chapters//,/ }; do
             if [ "$status" != "0" ] ; then
               echo "Problem on line: ${idx}: ${id}"
             fi
-          done < <(cat results/elastic-chapter-${ch}.json | jq '.' -c  )
+          done < <(cat ${farResultsDir}elastic-chapter-${ch}.json | jq '.' -c  )
 
           echo "Completed Sending to Elastic: $(date)"
 
