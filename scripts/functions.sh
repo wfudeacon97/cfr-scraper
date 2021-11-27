@@ -5,6 +5,9 @@ function getNameForChapter(){
   if [ "$1" == "1" ] ; then
     agencyName=far
     agencyId=539
+  elif [ "$1" == "2" ] ; then
+    agencyName=dfar
+    agencyId=103
   elif [ "$1" == "8" ] ; then
     agencyName=vaar
     agencyId=520

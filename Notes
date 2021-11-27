@@ -5,3 +5,9 @@ Home page:
   - Expandable list- pulled from JSON / Mongo, type 2
       The Title must start with 'SubChapter'
       see web/src/home-page/subchapter-list.tsx
+
+
+Adding an Agency
+
+curl https://www.federalregister.gov/api/v1/agencies | jq '.[]  ' -c
+curl https://www.federalregister.gov/api/v1/agencies | jq '.[] | {id, name,json_url,parent_id,slug} ' -c | sort | jq '.' -c | grep -i Defense
