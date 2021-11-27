@@ -1,0 +1,1 @@
+[{"_id":{"$oid":"5d8a0a2fcdcf66203beb0a60"},"name":"Defense Department","agencyId":103,"url":"https://www.federalregister.gov/agencies/defense-department","jsonUrl":"https://www.federalregister.gov/api/v1/agencies/103","slug":"defense-department","createdAt":{"$date":"2021-11-26T16:17:00.000Z"},"updatedAt":{"$date":"2021-11-26T16:17:00.000Z"},"__v":0}]

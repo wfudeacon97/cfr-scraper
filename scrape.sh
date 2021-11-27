@@ -55,7 +55,7 @@ fi
 
 ## These may both be MAC specific
 fileSize=$(stat -f "%z" ${tmpDir}raw-${dt}.xml)
-fileSha=$(openssl dgst -sha256 ${tmpDir}raw-2021-11-08.xml | cut -d" " -f2)
+fileSha=$(openssl dgst -sha256 ${tmpDir}raw-${dt}.xml | cut -d" " -f2)
 #==========================================#
 ############ Process FAR ###################
 #==========================================#
@@ -68,7 +68,7 @@ if [ "${includeFAR}" == "Y" ] ; then
   echo "=====   FAR: (agencyId: ${agencyId})"
   echo "======================================="
 
-  echo "{\"title\":48,\"chapter\":${ch},\"agencyName\":\"FAR\",\"cfrDate\":\"${dt}\",\"url\":\"https://www.ecfr.gov/api/versioner/v1/full/${dt}/title-48.xml\",\"gitHash\":\"$(cat ${tmpDir}git.meta)\",\"scrapeDate\":{\"\$date\": \"$DATE\"},\"size\":${fileSize},\"sha\":\"${fileSha}\"}" > ${farResultsDir}scrape-${ch}.json
+  echo "{\"title\":48,\"chapter\":${ch},\"agencyName\":\"FAR\",\"cfrDate\":\"${dt}\",\"url\":\"https://www.ecfr.gov/api/versioner/v1/full/${dt}/title-48.xml\",\"gitHash\":\"$(cat ${resultsDir}git.meta)\",\"scrapeDate\":{\"\$date\": \"$DATE\"},\"size\":${fileSize},\"sha\":\"${fileSha}\"}" > ${farResultsDir}scrape-${ch}.json
 
   #==================================================#
   ### Generate Raw JSON from XML
@@ -121,7 +121,7 @@ if [ "${includeFAR}" == "Y" ] ; then
     jq '. + {content: ""}' -c  \
     >> ${farResultsDir}mongo-chapter-${ch}.json
 
-  ## Type 5
+  ## Type 5  -> 3
   cat ${tmpDir}raw-section-${ch}.json |
     jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
     jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
@@ -137,20 +137,28 @@ if [ "${includeFAR}" == "Y" ] ; then
   ###      - ${farResultsDir}elastic-chapter-1.json
   #==================================================#
   echo " - Generate json for Elastic for FAR"
-  cat ${tmpDir}raw-subchapter-${ch}.json | \
-    jq '{_id, title, htmlUrl, content, cfrIdentifier, agencies, type}' -c \
+  cat ${tmpDir}raw-subchapter-${ch}.json \
+    | jq '{_id, title, htmlUrl, content, cfrIdentifier, type}' -c \
+    | jq '. | select (.content == "" | not)' -c \
+    | jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' -c \
     > ${farResultsDir}elastic-chapter-${ch}.json
 
-  cat ${tmpDir}raw-part-${ch}.json | \
-    jq '{_id, title, htmlUrl, content, cfrIdentifier, agencies, type}' -c \
+  cat ${tmpDir}raw-part-${ch}.json  \
+    | jq '{_id, title, htmlUrl, content, cfrIdentifier, type}' -c \
+    | jq '. | select (.content == "" | not)' -c \
+    | jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' -c \
     >> ${farResultsDir}elastic-chapter-${ch}.json
 
-  cat ${tmpDir}raw-subpart-${ch}.json | \
-    jq '{_id, title, htmlUrl, content, cfrIdentifier, agencies, type}' -c \
+  cat ${tmpDir}raw-subpart-${ch}.json  \
+    | jq '{_id, title, htmlUrl, content, cfrIdentifier, type}' -c \
+    | jq '. | select (.content == "" | not)' -c \
+    | jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' -c \
     >> ${farResultsDir}elastic-chapter-${ch}.json
 
-  cat ${tmpDir}raw-section-${ch}.json | \
-    jq '{_id, title, htmlUrl, content, cfrIdentifier, agencies, type}' -c \
+  cat ${tmpDir}raw-section-${ch}.json  \
+    | jq '{_id, title, htmlUrl, content, cfrIdentifier, type}' -c \
+    | jq '. | select (.content == "" | not)' -c \
+    | jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' -c \
     >> ${farResultsDir}elastic-chapter-${ch}.json
 
   echo "   - Results: ${farResultsDir}elastic-chapter-${ch}.json : $(cat ${farResultsDir}elastic-chapter-${ch}.json | jq '.' -c | wc -l)"

@@ -1,5 +1,13 @@
+11/26
+  TEST:  DFARs is deployed (code is in Git stash in test/openthefar)
 
-Commit changes to Application
+  ALSO:  TEST: Search results link does not appear to include #[section]
+         GIT:   Commit scraper changes
+                Commit Search changes (once PROD is working)
+
+====================
+What happens when you index Supplement... does it work?
+How to create link to switch supplement (does it need to limit search query?)
 
 Internal links on VAAR pages(?) - will hover over look funny?
 

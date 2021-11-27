@@ -17,9 +17,11 @@ if [ "${environment}" == "test" ] || [ "${environment}" == "Test" ] || [ "${envi
   echo "Uploading to ${environment}"
   source ${connectDir}connect-test.sh
 elif [ "${environment}" == "prod" ] || [ "${environment}" == "Prod" ] || [ "${environment}" == "PROD" ]; then
-  echo "Uploading to ${environment} -DISABLED"
-  exit 1
-#  source connect/connect-prod.sh
+#  echo "Uploading to ${environment} -DISABLED"
+#  exit 1
+  echo "Uploading to ${environment}"
+  source connect/connect-prod.sh
+
 else
   echo "Invalid environment: ${environment}"
   exit 1
@@ -28,6 +30,9 @@ fi
 #====================================================#
 ############ Reset to scrape from s3  ################
 #====================================================#
+echo "########################################"
+echo "-- Reloading Scrape Data from S3"
+echo "########################################"
 ./reload-scrape.sh ${cfrDate}
 result=$?
 if [ "$result" != "0" ] ; then
@@ -37,6 +42,10 @@ fi
 #=================================================#
 ############ Upload Supplements ###################
 #=================================================#
+echo ""
+echo "########################################"
+echo "-- Uploading Data for other Supplements"
+echo "########################################"
 for ch in ${chapters//,/ }; do
   upload=N
   getNameForChapter ${ch}
@@ -81,15 +90,19 @@ done
 #==========================================#
 ############ Upload FAR ###################
 #==========================================#
-#TOOD:  Finish the mongo.json for the FAR and upload to Mongo
+echo ""
+echo "########################################"
+echo "-- Uploading FAR Data"
+echo "########################################"
 for ch in ${chapters//,/ }; do
   upload=N
+  getNameForChapter ${ch}
   ## Check that the scrapes chapter is in the list to load
-  for scrapeCh in ${scrapeChapters//,/ }; do
-    if [ "${ch}" == "${scrapeCh}" ] ; then
+  if [ -d ${resultsDir}${agencyName} ]; then
       upload=Y
-    fi
-  done
+  else
+    echo "No scrape exists for chapter ${ch}: ${agencyName}"
+  fi
   getNameForChapter ${ch}
   if [ "${ch}" == "1" ] ; then
     farResultsDir=${resultsDir}${agencyName}/
@@ -144,6 +157,7 @@ for ch in ${chapters//,/ }; do
           ### Upload new Elastic indexed docments
           #==================================================#
           echo "- Upload new indexed documents from Elastic for ${agencyName} to index ${indexName}"
+          echo "   Started at: $(date)"
           idx=0
           while read j; do
             idx=$((idx+1))
@@ -156,7 +170,7 @@ for ch in ${chapters//,/ }; do
             if [ "$status" != "0" ] ; then
               echo "Problem on line: ${idx}: ${id}"
             fi
-          done < <(cat ${farResultsDir}elastic-chapter-${ch}.json | jq '.' -c  )
+          done < <(cat ${farResultsDir}elastic-chapter-${ch}.json | jq '. | select (.content == "" | not)' -c  )
 
           echo "Completed Sending to Elastic: $(date)"
 

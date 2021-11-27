@@ -23,6 +23,19 @@
 - connect- this has the connection information for the individual environments
 - prod-data- this has data pulled from prod for comparing the scraper results to
 
+##Adding an Agency
+
+#### (1) Find the Agency Json
+
+First, you need to get the Agency JSON from the federalregister.gov.  This will need to be both (a) inserted to the agencies collection in Mongo as well as (b) written as a list '[]' in agencies/agency-[id].json
+
+```
+curl https://www.federalregister.gov/api/v1/agencies | jq '.[]  ' -c
+curl https://www.federalregister.gov/api/v1/agencies | jq '.[] | {id, name,json_url,parent_id,slug} ' -c | sort | jq '.' -c | grep -i Defense
+```
+#### (2) Update scripts/functions.sh
+
+
 ## Tools
 - /bin/bash
 - python
