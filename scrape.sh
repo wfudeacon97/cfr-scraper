@@ -1,9 +1,4 @@
 #!/bin/bash
-
-################# Control Variables ##################
-#Used in generating the Mongo Records
-DATE=$(date -u +'%FT%TZ')
-######################################################
 source scripts/functions.sh
 
 #====================================================#
@@ -26,20 +21,19 @@ for ch in ${chapters//,/ }; do
   if [ "${ch}" == "1" ] ; then
     includeFAR=Y
   fi
+  if [ ! -f agencies/agency-chapter-${ch}.json ]; then
+    echo "ERROR There is no agency configuration for chapter ${ch} (agencies/agency-chapter-${ch}.json) "
+    exit 1
+  fi
+  getNameForChapter ${ch}
+  mkdir -p results/${agencyName}/
+  echo "Scraping ${agencyName} as id: ${agencyId}"
 done
 
 #====================================================#
 ############ Cleanup prior runs    ###################
 #====================================================#
 ./reset.sh
-
-#====================================================#
-############ Metadata              ###################
-#====================================================#
-echo "${chapters}" > ${resultsDir}chapters.meta
-echo "${dt}" > ${resultsDir}cfr-date.meta
-echo "$(date)" > ${resultsDir}run-date.meta
-echo $(git log -1 | head -1 | awk '{print $2}') > ${resultsDir}git.meta
 
 #====================================================#
 ############ Download new XML File ###################
@@ -53,22 +47,45 @@ else
 #  curl -X GET "https://ecfr.federalregister.gov/api/versioner/v1/full/${dt}/title-48.xml" -H "accept: application/xml" > ${tmpDir}raw-${dt}.xml
 fi
 
+#====================================================#
+############ Metadata              ###################
+#====================================================#
+echo "${chapters}" > ${resultsDir}chapters.meta
+echo "${dt}" > ${resultsDir}cfr-date.meta
+echo "$(date)" > ${resultsDir}run-date.meta
+echo $(git log -1 | head -1 | awk '{print $2}') > ${resultsDir}git.meta
 ## These may both be MAC specific
 fileSize=$(stat -f "%z" ${tmpDir}raw-${dt}.xml)
 fileSha=$(openssl dgst -sha256 ${tmpDir}raw-${dt}.xml | cut -d" " -f2)
+DATE=$(date -u +'%FT%TZ')
+echo $DATE > ${resultsDir}created-date.meta
+
 #==========================================#
 ############ Process FAR ###################
 #==========================================#
 if [ "${includeFAR}" == "Y" ] ; then
-  agencyId=539
-  farResultsDir=${resultsDir}far/
-  mkdir -p ${resultsDir}far/html/
   ch=1
+  getNameForChapter ${ch}
+  farResultsDir=${resultsDir}${agencyName}/
+  mkdir -p ${resultsDir}${agencyName}/html/
+
   echo "======================================="
-  echo "=====   FAR: (agencyId: ${agencyId})"
+  echo "=====   ${agencyDisplayname}: (agencyId: ${agencyId})"
   echo "======================================="
 
   echo "{\"title\":48,\"chapter\":${ch},\"agencyName\":\"FAR\",\"cfrDate\":\"${dt}\",\"url\":\"https://www.ecfr.gov/api/versioner/v1/full/${dt}/title-48.xml\",\"gitHash\":\"$(cat ${resultsDir}git.meta)\",\"scrapeDate\":{\"\$date\": \"$DATE\"},\"size\":${fileSize},\"sha\":\"${fileSha}\"}" > ${farResultsDir}scrape-${ch}.json
+
+  #==================================================#
+  ### Generate Agency JSON
+  ### - Creates:
+  ###      - ${farResultsDir}/agency-chapter-${ch}.json
+  ###      - ${farResultsDir}/agency-chapter-${ch}-doc.json
+  #==================================================#
+  #TODO:  Add Created Date to this
+  cp agencies/agency-chapter-${ch}.json ${farResultsDir}
+
+  agencyJsonForDoc=${farResultsDir}/agency-chapter-${ch}-doc.json
+  cat agencies/agency-chapter-${ch}.json | jq '.[0]' | jq '[{_id,agencyId,name,shortName,chapter}]' -c > ${agencyJsonForDoc}
 
   #==================================================#
   ### Generate Raw JSON from XML
@@ -91,48 +108,32 @@ if [ "${includeFAR}" == "Y" ] ; then
   ### - Creates:
   ###      - ${farResultsDir}mongo-chapter-1.json
   ##    - Remove the content field
-  ##    - Add the createdAt and updatedAt fields
-  ##    - Add the Agency field from the agencies/ folder
+  ##    -  createdAt/ updatedAt and Agency fields are added at upload time
   #==================================================#
   ## Type 1
-  cat ${tmpDir}raw-subchapter-${ch}.json |
-    jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
-    jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
-    jq --arg DATE "$DATE"  '.updatedAt += {"$date": $DATE}' -c |
-    jq 'del(.content )' | \
-    jq '. + {content: ""}' -c  \
+  cat ${tmpDir}raw-subchapter-${ch}.json | \
+    jq 'del(.content )' |  jq '. + {content: ""}' -c  \
     > ${farResultsDir}mongo-chapter-${ch}.json
 
   ## Type 2
-  cat ${tmpDir}raw-part-${ch}.json |
-    jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
-    jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
-    jq --arg DATE "$DATE"  '.updatedAt += {"$date": $DATE}' -c |
-    jq 'del(.content )' | \
-    jq '. + {content: ""}' -c  \
+  cat ${tmpDir}raw-part-${ch}.json | \
+    jq 'del(.content )' |  jq '. + {content: ""}' -c  \
     >> ${farResultsDir}mongo-chapter-${ch}.json
 
   ## Type 3
-  cat ${tmpDir}raw-subpart-${ch}.json |
-    jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
-    jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
-    jq --arg DATE "$DATE"  '.updatedAt += {"$date": $DATE}' -c |
-    jq 'del(.content )' | \
-    jq '. + {content: ""}' -c  \
+  cat ${tmpDir}raw-subpart-${ch}.json | \
+    jq 'del(.content )' |  jq '. + {content: ""}' -c  \
     >> ${farResultsDir}mongo-chapter-${ch}.json
 
   ## Type 5  -> 3
-  cat ${tmpDir}raw-section-${ch}.json |
-    jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
-    jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
-    jq --arg DATE "$DATE"  '.updatedAt += {"$date": $DATE}' -c |
-    jq 'del(.content )' | \
-    jq '. + {content: ""}' -c  \
+  cat ${tmpDir}raw-section-${ch}.json | \
+    jq 'del(.content )' |  jq '. + {content: ""}' -c  \
     >> ${farResultsDir}mongo-chapter-${ch}.json
   echo "       - Total: $(cat ${farResultsDir}mongo-chapter-1.json | jq . -c | wc -l)"
 
   #==================================================#
   ### Clean up JSON for uploading to Elastic
+  ### The agency block gets added at upload time
   ### - Creates:
   ###      - ${farResultsDir}elastic-chapter-1.json
   #==================================================#
@@ -140,25 +141,21 @@ if [ "${includeFAR}" == "Y" ] ; then
   cat ${tmpDir}raw-subchapter-${ch}.json \
     | jq '{_id, title, htmlUrl, content, cfrIdentifier, type}' -c \
     | jq '. | select (.content == "" | not)' -c \
-    | jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' -c \
     > ${farResultsDir}elastic-chapter-${ch}.json
 
   cat ${tmpDir}raw-part-${ch}.json  \
     | jq '{_id, title, htmlUrl, content, cfrIdentifier, type}' -c \
     | jq '. | select (.content == "" | not)' -c \
-    | jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' -c \
     >> ${farResultsDir}elastic-chapter-${ch}.json
 
   cat ${tmpDir}raw-subpart-${ch}.json  \
     | jq '{_id, title, htmlUrl, content, cfrIdentifier, type}' -c \
     | jq '. | select (.content == "" | not)' -c \
-    | jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' -c \
     >> ${farResultsDir}elastic-chapter-${ch}.json
 
   cat ${tmpDir}raw-section-${ch}.json  \
     | jq '{_id, title, htmlUrl, content, cfrIdentifier, type}' -c \
     | jq '. | select (.content == "" | not)' -c \
-    | jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' -c \
     >> ${farResultsDir}elastic-chapter-${ch}.json
 
   echo "   - Results: ${farResultsDir}elastic-chapter-${ch}.json : $(cat ${farResultsDir}elastic-chapter-${ch}.json | jq '.' -c | wc -l)"
@@ -185,7 +182,7 @@ if [ "${includeFAR}" == "Y" ] ; then
   #==================================================#
   echo ""
   echo " - Update citations to internal links"
-  ./replaceCitation-far.sh
+  .${scriptsDir}replaceCitation-far.sh
   echo "======================================="
 
   cp ${resultsDir}*.meta ${farResultsDir}
@@ -200,11 +197,23 @@ for ch in ${chapters//,/ }; do
   if [ "${ch}" != "1" ] ; then
     # This assigns the "agencyName" variable
     getNameForChapter ${ch}
-    agencyDisplayname=$(echo ${agencyName} | tr [:lower:] [:upper:])
+
     supplResultsDir=${resultsDir}${agencyName}/
     mkdir -p ${supplResultsDir}
 
     echo "{\"title\":48,\"chapter\":${ch},\"agencyName\":\"${agencyDisplayname}\",\"cfrDate\":\"${dt}\",\"url\":\"https://www.ecfr.gov/api/versioner/v1/full/${dt}/title-48.xml\",\"gitHash\":\"$(cat ${resultsDir}git.meta)\",\"scrapeDate\":{\"\$date\": \"$DATE\"},\"size\":${fileSize},\"sha\":\"${fileSha}\"}" > ${supplResultsDir}scrape-${ch}.json
+
+    #==================================================#
+    ### Generate Agency JSON
+    ### - Creates:
+    ###      - ${supplResultsDir}/agency-chapter-${ch}.json
+    ###      - ${supplResultsDir}/agency-chapter-${ch}-doc.json
+    #==================================================#
+    #TODO:  Add Created Date to this
+    cp agencies/agency-chapter-${ch}.json ${supplResultsDir}
+
+    agencyJsonForDoc=${supplResultsDir}/agency-chapter-${ch}-doc.json
+    cat agencies/agency-chapter-${ch}.json | jq '.[0]' | jq '[{_id,agencyId,name,shortName,chapter}]' -c > ${agencyJsonForDoc}
 
     #==================================================#
     ### Generate Raw JSON from XML
@@ -229,46 +238,58 @@ for ch in ${chapters//,/ }; do
     ### - Creates:
     ###      - ${resultsDir}mongo-chapter-${ch}.json
     ##    - Remove the content field
-    ##    - Add the createdAt and updatedAt fields
-    ##    - Add the Agency field from the agencies/ folder
+    ##    -  createdAt/ updatedAt and Agency fields are added at upload time
     #==================================================#
     ## Type 1-
     #cat ${tmpDir}raw-subchapter-${ch}.json |
-    #  jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
-    #  jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
-    #  jq --arg DATE "$DATE"  '.updatedAt += {"$date": $DATE}' -c |
-    #  jq 'del(.content )' | \
-    #  jq '. + {content: ""}' -c  \
+    #  jq 'del(.content )' |  jq '. + {content: ""}' -c  \
     #  > ${resultsDir}mongo-chapter-${ch}.json
 
     ## Type 2-  Removing this, because it breaks the expandable chapter list on the first page
     #cat ${tmpDir}raw-part-${ch}.json |
-    #  jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
-    #  jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
-    #  jq --arg DATE "$DATE"  '.updatedAt += {"$date": $DATE}' -c |
-    #  jq 'del(.content )' | \
-    #  jq '. + {content: ""}' -c  \
+    #  jq 'del(.content )' |  jq '. + {content: ""}' -c  \
     #  >> ${resultsDir}mongo-chapter-${ch}.json
 
     ## Type 3
     cat ${tmpDir}raw-subpart-${ch}.json |
-      jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
-      jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
-      jq --arg DATE "$DATE"  '.updatedAt += {"$date": $DATE}' -c |
-      jq 'del(.content )' | \
-      jq '. + {content: ""}' -c  \
+      jq 'del(.content )' | jq '. + {content: ""}' -c  \
       >> ${supplResultsDir}mongo-chapter-${ch}.json
 
     ## Type 5
     cat ${tmpDir}raw-section-${ch}.json |
-      jq --argjson json "`<agencies/agency-${agencyId}.json`" '. + {agencies: $json}' |\
-      jq --arg DATE "$DATE"  '.createdAt += {"$date": $DATE}' | \
-      jq --arg DATE "$DATE"  '.updatedAt += {"$date": $DATE}' -c |
-      jq 'del(.content )' | \
-      jq '. + {content: ""}' -c  \
+      jq 'del(.content )' | jq '. + {content: ""}' -c  \
       >> ${supplResultsDir}mongo-chapter-${ch}.json
 
     echo "        - Total: $(cat ${supplResultsDir}mongo-chapter-${ch}.json | jq . -c | wc -l)"
+
+    #==================================================#
+    ### Clean up JSON for uploading to Elastic
+    ### The agency block gets added at upload time
+    ### - Creates:
+    ###      - ${farResultsDir}elastic-chapter-1.json
+    #==================================================#
+    echo " - Generate json for Elastic for ${agencyDisplayname}"
+    cat ${tmpDir}raw-subchapter-${ch}.json \
+      | jq '{_id, title, htmlUrl, content, cfrIdentifier, type}' -c \
+      | jq '. | select (.content == "" | not)' -c \
+      > ${supplResultsDir}elastic-chapter-${ch}.json
+
+    cat ${tmpDir}raw-part-${ch}.json  \
+      | jq '{_id, title, htmlUrl, content, cfrIdentifier, type}' -c \
+      | jq '. | select (.content == "" | not)' -c \
+      >> ${supplResultsDir}elastic-chapter-${ch}.json
+
+    cat ${tmpDir}raw-subpart-${ch}.json  \
+      | jq '{_id, title, htmlUrl, content, cfrIdentifier, type}' -c \
+      | jq '. | select (.content == "" | not)' -c \
+      >> ${supplResultsDir}elastic-chapter-${ch}.json
+
+    cat ${tmpDir}raw-section-${ch}.json  \
+      | jq '{_id, title, htmlUrl, content, cfrIdentifier, type}' -c \
+      | jq '. | select (.content == "" | not)' -c \
+      >> ${supplResultsDir}elastic-chapter-${ch}.json
+
+    echo "   - Results: ${supplResultsDir}elastic-chapter-${ch}.json : $(cat ${supplResultsDir}elastic-chapter-${ch}.json | jq '.' -c | wc -l)"
 
     ###################################################################
     #==================================================#

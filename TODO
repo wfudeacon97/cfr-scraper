@@ -2,8 +2,6 @@
   TEST:  DFARs is deployed (code is in Git stash in test/openthefar)
 
   ALSO:  TEST: Search results link does not appear to include #[section]
-         GIT:   Commit scraper changes
-                Commit Search changes (once PROD is working)
 
 ====================
 What happens when you index Supplement... does it work?
