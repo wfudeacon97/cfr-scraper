@@ -1,0 +1,54 @@
+src//constants/index.ts:export enum RegulationType {
+src//utils/index.tsx:  RegulationType,
+src//utils/index.tsx:  let regulationType = RegulationType.FAR;
+src//components/far-navigation-buttons.tsx:import { RegulationType, DocumentType } from '../constants';
+src//components/far-navigation-buttons.tsx:              agencyId: RegulationType.FAR,
+src//components/regulation-details-page.tsx:import { metatagsNames, RegulationType, IFRAME_FAR_BUCKET } from '../constants/index';
+src//components/regulation-details-page.tsx:    regulationType: RegulationType;
+src//components/regulation-details-page.tsx:    if (nextProps.match.params.regulationType == RegulationType.FAR) {
+src//components/regulation-details-page.tsx:      if (regulationType == RegulationType.FAR) {
+src//components/navigation-drawer.tsx:import { fontSize, fontWeight, RegulationType, DocumentType } from '../constants';
+src//components/navigation-drawer.tsx:  regulationType: RegulationType;
+src//components/navigation-drawer.tsx:              agencyId: RegulationType.FAR,
+src//components/navigation-drawer.tsx:    let path = `${RegulationType.FAR}/${partNumber}/${partHtmlUrl}`;
+src//components/navigation-drawer.tsx:        regulationType={RegulationType.FAR}
+src//components/right-navigation.tsx:  RegulationType,
+src//components/right-navigation.tsx:  regulationType?: RegulationType;
+src//components/right-navigation.tsx:            <PartGrid regulationType={RegulationType.FAR} updateFarBreadcrumbs={this.props.updateFarBreadcrumbs} />
+src//components/right-navigation.tsx:      return <TableOfContents regulationType={RegulationType.VAAR} partNumber={this.props.partNumber} />;
+src//components/sub-header-band.tsx:  RegulationType,
+src//components/sub-header-band.tsx:    if (regulationType == RegulationType.FAR) {
+src//components/sub-header-band.tsx:            link: `/regulations/${RegulationType.FAR}/${partNumber}/${file}`,
+
+######These can be driven off the agency in the recor
+src//components/search/search-results.tsx:import { defaultFont, setMargin, fontSize, fontWeight, DEFAULT_FONT_WEIGHT, RegulationType } from '../../constants';
+src//components/search/search-results.tsx:        if (regulationType == RegulationType.VAAR) {
+
+src//components/stories/navigation-drawer.stories.tsx:import { RegulationType } from '../../constants';
+src//components/stories/navigation-drawer.stories.tsx:  return <NavigationDrawer partNumber="2" regulationType={RegulationType.FAR} navbarVisibility />;
+src//components/profile/profile-constants.ts:export enum RegulationType {
+src//components/profile/login/login-panel.tsx:import { AUTH_TOKEN_KEY, AUTH_TOKEN_KEY_TIMESTAMP, RegulationType, BreadcrumbsDocumentType } from '../../../constants';
+src//components/profile/login/login-panel.tsx:        successUrl = `/regulations/${RegulationType.FAR}/${BreadcrumbsDocumentType.PART}/FAR-i1129394.html`;
+src//components/parts.tsx:  RegulationType,
+src//components/parts.tsx:  regulationType?: RegulationType;
+src//components/parts.tsx:  regulationType: RegulationType;
+src//components/parts.tsx:    if (this.props.regulationType == RegulationType.VAAR) {
+src//components/parts.tsx:          link: `/regulations/${RegulationType.FAR}/${part}/${partHtmlUrl}`,
+src//components/parts.tsx:          link: `/regulations/${RegulationType.FAR}/${part}/${partLink}`,
+src//components/parts.tsx:    if (this.props.regulationType == RegulationType.VAAR) {
+src//components/parts/parts-list.tsx:import { RegulationType } from '../../constants';
+src//components/parts/parts-list.tsx:            regulationType={RegulationType.FAR}
+src//components/parts/parts-grid.tsx:import { setMargin, defaultTextColor, defaultFontSize, RegulationType, DocumentType } from '../../constants';
+src//components/parts/parts-grid.tsx:              agencyId: RegulationType.FAR,
+src//components/parts/parts-grid.tsx:          link: `/regulations/${RegulationType.FAR}/${partNumber}/${htmlUrl}`,
+src//components/parts/parts-grid.tsx:                to={`/regulations/${RegulationType.FAR}/${part}/${htmlUrl}`}
+src//components/table-of-contents.tsx:import { removePadding, setMargin, RegulationType, DocumentType } from '../constants';
+src//components/table-of-contents.tsx:  regulationType: RegulationType;
+src//components/table-of-contents.tsx:    return this.props.regulationType == RegulationType.VAAR ? partAppendChar + partNumber : partNumber;
+src//components/table-of-contents.tsx:      if (this.props.regulationType == RegulationType.VAAR) {
+src//interfaces/sub-header-band-interface.ts:import { RegulationType } from '../constants';
+src//interfaces/sub-header-band-interface.ts:  regulationType: RegulationType;
+src//interfaces/index.ts:import { RegulationType } from '../constants';
+src//interfaces/index.ts:  regulationType: RegulationType;
+src//interfaces/index.ts:  regulationType?: RegulationType;
+src//interfaces/index.ts:  regulationType?: RegulationType;

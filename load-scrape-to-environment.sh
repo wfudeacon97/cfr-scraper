@@ -11,7 +11,7 @@ cfrDate=$1
 environment=$2
 chapters=$3
 #Used in generating the Mongo Records
-DATE=$(date -u +'%FT%TZ')
+UPLOAD_DATE=$(date -u +'%FT%TZ')
 
 if [ "${environment}" == "test" ] || [ "${environment}" == "Test" ] || [ "${environment}" == "TEST" ]; then
   echo "Uploading to ${environment}"
@@ -44,7 +44,7 @@ fi
 #=================================================#
 echo ""
 echo "########################################"
-echo "-- Uploading Data for other Supplements"
+echo "-- Uploading Data for Supplements"
 echo "########################################"
 for ch in ${chapters//,/ }; do
   upload=N
@@ -57,17 +57,40 @@ for ch in ${chapters//,/ }; do
   fi
   supplResultsDir=${resultsDir}${agencyName}/
   if [ "${ch}" != "1" ] && [ "${upload}" == "Y" ]; then
+
+    #==================================================#
+    ### Remove and reinsert Agency Mongo records
+    ### - Uses:
+    ###      - results/vaar/mongo-chapter-${ch}.json
+    #==================================================#
+    echo " - Refresh agency record for ${agencyName}"
+    cat ${supplResultsDir}agency-chapter-${ch}.json | jq '.[]' -c |\
+      jq --arg DATE "$UPLOAD_DATE"  '.updatedAt += {"$date": $DATE}' -c \
+      > ${supplResultsDir}/mongo-agency-chapter-${ch}.json
+
+    mongo $url --username=$user --password=$pswd --quiet --eval "DBQuery.shellBatchSize = 10000; db.${agencyCollectionName}.deleteMany({\"agencyId\" : ${agencyId}})" | tail +6
+    mongoimport -u $user  -p $pswd -d ${dbName} -c ${agencyCollectionName} --uri ${url} < ${supplResultsDir}/mongo-agency-chapter-${ch}.json
+
     #==================================================#
     ### Remove and reinsert  Mongo records
     ### - Uses:
     ###      - results/vaar/mongo-chapter-${ch}.json
     #==================================================#
-    echo " - Upload mongo records for ${agencyName}"
-    mongo $url --username=$user --password=$pswd --quiet --eval "DBQuery.shellBatchSize = 10000; db.federaldocuments.deleteMany({\"agencies.agencyId\" : ${agencyId}})" | tail +6
-    mongoimport -u $user  -p $pswd -d ${dbName} -c ${collectionName} --uri ${url} < ${supplResultsDir}mongo-chapter-${ch}.json
+    echo " - Update mongo records with dates/ agency for ${agencyName}"
+    # Add the createdDate/ uploadDate/ Agencies to the json for Mongo
+    CREATED_DATE=$(cat ${supplResultsDir}created-date.meta)
+    cat ${supplResultsDir}mongo-chapter-${ch}.json |\
+      jq --argjson json "`<${supplResultsDir}/agency-chapter-${ch}-doc.json`" '. + {agencies: $json}' |\
+      jq --arg DATE "$CREATED_DATE"  '.createdAt += {"$date": $DATE}' | \
+      jq --arg DATE "$UPLOAD_DATE"  '.updatedAt += {"$date": $DATE}' -c \
+      > ${supplResultsDir}/mongo-federaldocuments-chapter-${ch}.json
 
-    cat ${supplResultsDir}scrape-${ch}.json | jq --arg DATE "$DATE"  '.uploadedAt += {"$date": $DATE}' -c > ${supplResultsDir}scrape-${ch}.json
-    mongoimport -u $user  -p $pswd -d ${dbName} -c ${scraperCollectionName} --uri ${url} < ${supplResultsDir}scrape-${ch}.json
+    echo " - Upload mongo records for ${agencyName}"
+    mongo $url --username=$user --password=$pswd --quiet --eval "DBQuery.shellBatchSize = 10000; db.${collectionName}.deleteMany({\"agencies.agencyId\" : ${agencyId}})" | tail +6
+    mongoimport -u $user  -p $pswd -d ${dbName} -c ${collectionName} --uri ${url} < ${supplResultsDir}/mongo-federaldocuments-chapter-${ch}.json
+
+    cat ${supplResultsDir}scrape-${ch}.json | jq --arg DATE "$UPLOAD_DATE"  '.uploadedAt += {"$date": $DATE}' -c > ${supplResultsDir}mongo-scrape-${ch}.json
+    mongoimport -u $user  -p $pswd -d ${dbName} -c ${scraperCollectionName} --uri ${url} < ${supplResultsDir}mongo-scrape-${ch}.json
 
     #==================================================#
     ### Remove old html records
@@ -103,24 +126,47 @@ for ch in ${chapters//,/ }; do
   else
     echo "No scrape exists for chapter ${ch}: ${agencyName}"
   fi
-  getNameForChapter ${ch}
+
   if [ "${ch}" == "1" ] ; then
     farResultsDir=${resultsDir}${agencyName}/
     if [ "${upload}" == "Y" ] ; then
       echo "======================================="
       echo "=====   Upload FAR (agencyId: ${agencyId})"
       echo "======================================="
+
+      #==================================================#
+      ### Remove and reinsert Agency Mongo records
+      ### - Uses:
+      ###      - results/vaar/mongo-chapter-${ch}.json
+      #==================================================#
+      echo " - Refresh agency record for ${agencyName}"
+      cat ${farResultsDir}agency-chapter-${ch}.json | jq '.[]' -c |\
+        jq --arg DATE "$UPLOAD_DATE"  '.updatedAt += {"$date": $DATE}' -c \
+        > ${farResultsDir}/mongo-agency-chapter-${ch}.json
+
+      mongo $url --username=$user --password=$pswd --quiet --eval "DBQuery.shellBatchSize = 10000; db.${agencyCollectionName}.deleteMany({\"agencyId\" : ${agencyId}})" | tail +6
+      mongoimport -u $user  -p $pswd -d ${dbName} -c ${agencyCollectionName} --uri ${url} < ${farResultsDir}/mongo-agency-chapter-${ch}.json
+
       #==================================================#
       ### Remove and reinsert  Mongo records
       ### - Uses:
       ###      - ${farResultsDir}mongo-chapter-${ch}.json
       #==================================================#
-      echo " - Upload mongo records for ${agencyName}"
-      mongo $url --username=$user --password=$pswd --quiet --eval "DBQuery.shellBatchSize = 10000; db.federaldocuments.deleteMany({\"agencies.agencyId\" : ${agencyId}})" | tail +6
-      mongoimport -u $user  -p $pswd -d ${dbName} -c ${collectionName} --uri ${url} < ${farResultsDir}mongo-chapter-${ch}.json
+      echo " - Update mongo records with dates/ agency for ${agencyName}"
+      # Add the createdDate/ uploadDate/ Agencies to the json for Mongo
+      CREATED_DATE=$(cat ${farResultsDir}created-date.meta)
+      cat ${farResultsDir}mongo-chapter-${ch}.json |\
+        jq --argjson json "`<${farResultsDir}/agency-chapter-${ch}-doc.json`" '. + {agencies: $json}' |\
+        jq --arg DATE "$CREATED_DATE"  '.createdAt += {"$date": $DATE}' | \
+        jq --arg DATE "$UPLOAD_DATE"  '.updatedAt += {"$date": $DATE}' -c \
+        > ${farResultsDir}/mongo-federaldocuments-chapter-${ch}.json
 
-      cat ${farResultsDir}scrape-${ch}.json | jq --arg DATE "$DATE"  '.uploadedAt += {"$date": $DATE}' -c > ${farResultsDir}scrape-${ch}.json
-      mongoimport -u $user  -p $pswd -d ${dbName} -c ${scraperCollectionName} --uri ${url} < ${farResultsDir}scrape-${ch}.json
+      echo " - Upload mongo records for ${agencyName}"
+      mongo $url --username=$user --password=$pswd --quiet --eval "DBQuery.shellBatchSize = 10000; db.${collectionName}.deleteMany({\"agencies.agencyId\" : ${agencyId}})" | tail +6
+      mongoimport -u $user  -p $pswd -d ${dbName} -c ${collectionName} --uri ${url} < ${farResultsDir}/mongo-federaldocuments-chapter-${ch}.json
+
+      cat ${farResultsDir}scrape-${ch}.json | jq --arg DATE "$UPLOAD_DATE"  '.uploadedAt += {"$date": $DATE}' -c > ${farResultsDir}mongo-scrape-${ch}.json
+      mongoimport -u $user  -p $pswd -d ${dbName} -c ${scraperCollectionName} --uri ${url} < ${farResultsDir}mongo-scrape-${ch}.json
 
       #==================================================#
       ### Remove old html records
@@ -164,13 +210,18 @@ for ch in ${chapters//,/ }; do
 
             request=$(echo $j | jq 'del(._id)' -c)
             id=$(echo $j | jq '"\(._id)"' -r)
+            #echo "curl -s -X PUT  https://search-far-elasticsearch-xqucmrm5ng7d43q55be2rk7hm4.us-east-2.es.amazonaws.com:443/${indexName}/_doc/${id} -H 'Content-Type: application/json' -d \"$request\""
             output=$(curl -s -X PUT  https://search-far-elasticsearch-xqucmrm5ng7d43q55be2rk7hm4.us-east-2.es.amazonaws.com:443/${indexName}/_doc/${id} -H 'Content-Type: application/json' -d "$request")
             status=$?
+            #echo "$output"
+            #echo "${status}"
 
-            if [ "$status" != "0" ] ; then
+            if [ "${status}" != "0" ] ; then
               echo "Problem on line: ${idx}: ${id}"
             fi
-          done < <(cat ${farResultsDir}elastic-chapter-${ch}.json | jq '. | select (.content == "" | not)' -c  )
+            #echo ""
+          # Read from the elastic-chapter file and add the agency block to it.
+          done < <(cat ${farResultsDir}elastic-chapter-${ch}.json | jq '. | select (.content == "" | not)' -c | jq --argjson json "`<${farResultsDir}/agency-chapter-${ch}-doc.json`" '. + {agencies: $json}' -c  )
 
           echo "Completed Sending to Elastic: $(date)"
 

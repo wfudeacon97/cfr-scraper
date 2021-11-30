@@ -2,15 +2,10 @@
 
 # $1 is the chapter number for title 48
 function getNameForChapter(){
-  if [ "$1" == "1" ] ; then
-    agencyName=far
-    agencyId=539
-  elif [ "$1" == "2" ] ; then
-    agencyName=dfar
-    agencyId=103
-  elif [ "$1" == "8" ] ; then
-    agencyName=vaar
-    agencyId=520
+  if [  -f agencies/agency-chapter-${1}.json ] ; then
+    agencyName=$(cat agencies/agency-chapter-${1}.json | jq '.[0]' | jq '.shortName' -r)
+    agencyDisplayname=$(echo ${agencyName} | tr [:lower:] [:upper:])
+    agencyId=$(cat agencies/agency-chapter-${1}.json | jq '.[0]' | jq '.agencyId' -r)
   else
     agencyName=$1
   fi
