@@ -1,4 +1,3 @@
-#!/usr/bin/python
 import xml.sax
 import sys
 import re
@@ -96,7 +95,7 @@ class CFRHandler( xml.sax.ContentHandler ):
          if currentTitle.ChapterNum == chapterToParse:
            newFile(1)
            currentTitle.partFile = open(htmlFolder + "/" +currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.PartNum + ".html", "a")
-           currentTitle.partFile.write("<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
+           currentTitle.partFile.write("<html lang=\"en\">\n<head>\n<!-- gen-far-part-html -->\n<!-- GOOGLE-ADD -->\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
            currentTitle.hasPartFile = "Y"
       elif tag == "DIV6":
          currentTitle.Level = "SubPart"

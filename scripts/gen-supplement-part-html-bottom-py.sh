@@ -1,4 +1,3 @@
-#!/usr/bin/python
 import xml.sax
 import sys
 import re

@@ -1,4 +1,3 @@
-#!/usr/bin/python
 import xml.sax
 import sys
 import re
@@ -104,7 +103,7 @@ class CFRHandler( xml.sax.ContentHandler ):
            subpartFileName=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.SubPartNum
            newFile(1)
            currentTitle.subpartFile = open(htmlFolder + "/" +subpartFileName + ".html", "a")
-           currentTitle.subpartFile.write("<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
+           currentTitle.subpartFile.write("<html lang=\"en\">\n<head>\n<!-- gen-far-subpart-html -->\n<!-- GOOGLE-ADD -->\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
            currentTitle.hasSubPartFile = "Y"
       #elif tag == "DIV7":
       #   currentTitle.Level = "DIV7"
@@ -118,7 +117,7 @@ class CFRHandler( xml.sax.ContentHandler ):
               subpart0FileName=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.PartNum
               newFile(1)
               currentTitle.subpart0File = open(htmlFolder + "/" +subpart0FileName + ".0.html", "a")
-              currentTitle.subpart0File.write("<html lang=\"en\">\n<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
+              currentTitle.subpart0File.write("<html lang=\"en\">\n<head>\n<!-- gen-far-subpart-html -->\n<!-- GOOGLE-ADD -->\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head>")
               currentTitle.hasSubPart0File = "Y"
 
       elif tag == "P":

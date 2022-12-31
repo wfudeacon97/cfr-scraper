@@ -93,6 +93,18 @@ for ch in ${chapters//,/ }; do
     mongoimport -u $user  -p $pswd -d ${dbName} -c ${scraperCollectionName} --uri ${url} < ${supplResultsDir}mongo-scrape-${ch}.json
 
     #==================================================#
+    ### Google Ad tracker -> Html for Production environment
+    #==================================================#
+    if [ "${environment}" == "prod" ] || [ "${environment}" == "Prod" ] || [ "${environment}" == "PROD" ]; then
+      echo "Production: Adding Google Ad tracker to html"
+
+      sed -i '' -e '/<!-- GOOGLE-ADD -->/r connect/googleads.txt' ${supplResultsDir}html/*.html
+
+    else
+      echo "${environment}: Skipping Google Ad tracker "
+    fi
+
+    #==================================================#
     ### Remove old html records
     #==================================================#
     echo "- Remove old html for ${agencyName}"
@@ -167,6 +179,18 @@ for ch in ${chapters//,/ }; do
 
       cat ${farResultsDir}scrape-${ch}.json | jq --arg DATE "$UPLOAD_DATE"  '.uploadedAt += {"$date": $DATE}' -c > ${farResultsDir}mongo-scrape-${ch}.json
       mongoimport -u $user  -p $pswd -d ${dbName} -c ${scraperCollectionName} --uri ${url} < ${farResultsDir}mongo-scrape-${ch}.json
+
+      #==================================================#
+      ### Google Ad tracker -> Html for Production environment
+      #==================================================#
+      if [ "${environment}" == "prod" ] || [ "${environment}" == "Prod" ] || [ "${environment}" == "PROD" ]; then
+        echo "Production: Adding Google Ad tracker to html"
+
+        sed -i '' -e '/<!-- GOOGLE-ADD -->/r connect/googleads.txt' ${farResultsDir}html/*.html
+
+      else
+        echo "${environment}: Skipping Google Ad tracker "
+      fi
 
       #==================================================#
       ### Remove old html records
