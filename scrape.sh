@@ -8,7 +8,7 @@ if [ -z $1 ] ; then
   echo "Expects at least one param: ChapterList (Integer- comma-delimited).  Second Param (Date YYYY-MM-DD) is optional"
   exit 1
 fi
-
+python  --version
 chapters=$1
 if [ -z $2 ] ; then
   dt=$(date '+%Y-%m-%d')
@@ -95,7 +95,7 @@ if [ "${includeFAR}" == "Y" ] ; then
   ###      - ${tmpDir}raw-section-1.json
   #==================================================#
   echo " - Generate json for Mongo for FAR"
-  ${scriptsDir}gen-rawjson-far-py.sh ${tmpDir}raw-${dt}.xml ${ch}
+  python ${scriptsDir}gen-rawjson-far-py.sh ${tmpDir}raw-${dt}.xml ${ch}
   echo "   - Results:"
   echo "       - SubChapters (type=1): $(cat ${tmpDir}raw-subchapter-${ch}.json | jq . -c | wc -l)"
   echo "       - Parts (type=2): $(cat ${tmpDir}raw-part-${ch}.json | jq . -c | wc -l)"
@@ -167,11 +167,11 @@ if [ "${includeFAR}" == "Y" ] ; then
   #==================================================#
   echo " - Generate html for FAR"
   #Div4
-  ${scriptsDir}gen-far-subchapter-html-py.sh ${tmpDir}raw-${dt}.xml ${farResultsDir}html 1
+  python ${scriptsDir}gen-far-subchapter-html-py.sh ${tmpDir}raw-${dt}.xml ${farResultsDir}html 1
   #Div5
-  ${scriptsDir}gen-far-part-html-py.sh ${tmpDir}raw-${dt}.xml ${farResultsDir}html 1
+  python ${scriptsDir}gen-far-part-html-py.sh ${tmpDir}raw-${dt}.xml ${farResultsDir}html 1
   #Div6
-  ${scriptsDir}gen-far-subpart-html-py.sh ${tmpDir}raw-${dt}.xml ${farResultsDir}html 1
+  python ${scriptsDir}gen-far-subpart-html-py.sh ${tmpDir}raw-${dt}.xml ${farResultsDir}html 1
 
   echo "    - Total files $(ls -Al ${farResultsDir}html/ | tail +2 | wc -l)"
 
@@ -182,7 +182,7 @@ if [ "${includeFAR}" == "Y" ] ; then
   #==================================================#
   echo ""
   echo " - Update citations to internal links"
-  .${scriptsDir}replaceCitation-far.sh
+  ${scriptsDir}replaceCitation-far.sh
   echo "======================================="
 
   cp ${resultsDir}*.meta ${farResultsDir}
@@ -226,7 +226,7 @@ for ch in ${chapters//,/ }; do
     echo "=====   ${agencyDisplayname} -agencyId: ${agencyId}"
     echo "======================================="
     echo " - Generate json for Mongo/ Elastic"
-    ${scriptsDir}gen-rawjson-suppl-py.sh ${tmpDir}raw-${dt}.xml ${ch}
+    python ${scriptsDir}gen-rawjson-suppl-py.sh ${tmpDir}raw-${dt}.xml ${ch}
     echo "   - Results: "
     echo "        - SubChapters: $(cat ${tmpDir}raw-subchapter-${ch}.json | jq . -c | wc -l)"
     echo "        - Parts: $(cat ${tmpDir}raw-part-${ch}.json | jq . -c | wc -l)"
@@ -300,9 +300,9 @@ for ch in ${chapters//,/ }; do
     echo " - Generate html for ${agencyDisplayname}"
     mkdir -p ${supplResultsDir}html
     echo "   - Generating HTML Top"
-    ${scriptsDir}gen-supplement-part-html-top-py.sh ${tmpDir}raw-${dt}.xml  ${supplResultsDir}html ${ch}
+    python ${scriptsDir}gen-supplement-part-html-top-py.sh ${tmpDir}raw-${dt}.xml  ${supplResultsDir}html ${ch}
     echo "   - Generating HTML Bottom"
-    ${scriptsDir}gen-supplement-part-html-bottom-py.sh ${tmpDir}raw-${dt}.xml  ${supplResultsDir}html ${ch}
+    python ${scriptsDir}gen-supplement-part-html-bottom-py.sh ${tmpDir}raw-${dt}.xml  ${supplResultsDir}html ${ch}
     echo "    - Total files $(ls -Al ${supplResultsDir}html | tail +2 | wc -l)"
 
     cp ${resultsDir}*.meta ${supplResultsDir}
