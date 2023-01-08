@@ -17,8 +17,8 @@ echo "Available chapters are: ${chapters}"
 for i in $(ls  -d results/*/); do echo "${i/results\//}" ; done
 
 #TODO:  Do we want to prevent this if there is a previous scrape with the same cfr-date?
-aws s3 rm s3://${bucketName}/${cfrDate}/ --region ${awsRegion}
-aws s3 sync ${resultsDir} s3://${bucketName}/${cfrDate}/ --region ${awsRegion} --exclude "*" --include "*.meta"
+aws s3 rm s3://${bucketName}/${cfrDate}/ --recursive --region ${awsRegion}
+aws s3 sync ${resultsDir} s3://${bucketName}/${cfrDate}/ --region ${awsRegion} --exclude "*" --include "*.meta" --include "*.xml"
 
 for i in $(ls  -d results/*/); do
   agencyDir=${i/results\//}

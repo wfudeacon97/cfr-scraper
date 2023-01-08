@@ -103,13 +103,28 @@ for ch in ${chapters//,/ }; do
     else
       echo "${environment}: Skipping Google Ad tracker "
     fi
+    #==================================================#
+    ### Google ADSENSE -> Html for Production environment
+    #==================================================#
+    if [ "$enableAdSenseSuppl" == "Y" ]; then
+      if [ "${environment}" == "prod" ] || [ "${environment}" == "Prod" ] || [ "${environment}" == "PROD" ]; then
+        echo "Production: Adding Google AdSense to html"
+
+        sed -i '' -e '/<!-- AD_SENSE -->/r connect/ad-sense.txt' ${supplResultsDir}html/*.html
+
+      else
+        echo "${environment}: Skipping Google AdSense "
+      fi
+    else
+      echo "${environment}: Skipping Google AdSense (enableAdSenseSuppl disabled in scripts/functions.sh)"
+    fi
 
     #==================================================#
     ### Remove old html records
     #==================================================#
     echo "- Remove old html for ${agencyName}"
-    echo "aws s3 rm s3://${bucketName}/${agencyName}/ --region ${awsRegion}"
-    aws s3 rm s3://${bucketName}/${agencyName}/ --region ${awsRegion}
+    echo "aws s3 rm s3://${bucketName}/${agencyName}/ --recursive  --region ${awsRegion}"
+    aws s3 rm s3://${bucketName}/${agencyName}/ --recursive --region ${awsRegion}
 
     #==================================================#
     ### Upload new html records
@@ -193,11 +208,39 @@ for ch in ${chapters//,/ }; do
       fi
 
       #==================================================#
+      ### Google ADSENSE -> Html for Production environment
+      #==================================================#
+      if [ "$enableAdSense" == "Y" ]; then
+        if [ "${environment}" == "prod" ] || [ "${environment}" == "Prod" ] || [ "${environment}" == "PROD" ]; then
+          echo "Production: Adding Google AdSense to html"
+
+          sed -i '' -e '/<!-- AD_SENSE -->/r connect/ad-sense.txt' ${farResultsDir}html/*.html
+
+        else
+          echo "${environment}: Skipping Google AdSense "
+        fi
+      else
+        echo "${environment}: Skipping Google AdSense (enableAdSense disabled in scripts/functions.sh)"
+      fi
+
+      #==================================================#
+      ### Sitemap
+      #==================================================#
+      echo "- Remove old html for ${agencyName}"
+      echo "aws s3 cp ${resultsDir}/sitemap.xml s3://${bucketName}/sitemap.xml --region ${awsRegion}"
+      aws s3 cp ${resultsDir}/sitemap.xml s3://${bucketName}/sitemap.xml --region ${awsRegion}
+      if [ "${environment}" == "prod" ] || [ "${environment}" == "Prod" ] || [ "${environment}" == "PROD" ]; then
+        curl https://www.google.com/webmasters/sitemaps/ping?sitemap=https://openthefar.com/sitemap.xml
+      else
+        echo "${environment}: Skipping Sitemap notification"
+      fi
+
+      #==================================================#
       ### Remove old html records
       #==================================================#
       echo "- Remove old html for ${agencyName}"
-      echo "aws s3 rm s3://${bucketName}/${agencyName}/ --region ${awsRegion}"
-      aws s3 rm s3://${bucketName}/${agencyName}/ --region ${awsRegion}
+      echo "aws s3 rm s3://${bucketName}/${agencyName}/  --recursive --region ${awsRegion}"
+      aws s3 rm s3://${bucketName}/${agencyName}/ --recursive --region ${awsRegion}
 
       #==================================================#
       ### Upload new html records

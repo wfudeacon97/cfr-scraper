@@ -6,6 +6,12 @@ source scripts/functions.sh
 #====================================================#
 if [ -z $1 ] ; then
   echo "Expects at least one param: ChapterList (Integer- comma-delimited).  Second Param (Date YYYY-MM-DD) is optional"
+  echo "Available Agencies are: "
+  for agency in $(ls agencies/); do
+    agencyName=$(cat agencies/${agency} | jq '.[0]' | jq '.shortName' -r)
+    id=$(cat agencies/${agency} | jq '.[0]' | jq '._id' -r | cut -d . -f2)
+    echo "${id}: ${agencyName}"
+  done
   exit 1
 fi
 python  --version
@@ -43,8 +49,18 @@ if [ -f ${tmpDir}raw-${dt}.xml ]; then
 else
   #https://www.ecfr.gov/api/versioner/v1/full/2021-09-11/title-48.xml
   curl -X GET "https://www.ecfr.gov/api/versioner/v1/full/${dt}/title-48.xml" -H "accept: application/xml" > ${tmpDir}raw-${dt}.xml
+
 #  https://www.ecfr.gov
 #  curl -X GET "https://ecfr.federalregister.gov/api/versioner/v1/full/${dt}/title-48.xml" -H "accept: application/xml" > ${tmpDir}raw-${dt}.xml
+fi
+
+size=$(wc -c ${tmpDir}raw-${dt}.xml | awk '{print $1}')
+if [ ${size} == "160" ]; then
+  echo "There is no valid file for ${tmpDir}raw-${dt}.xml!!"
+  echo "You can check here for other files:  https://www.ecfr.gov/api/versioner/v1/full/${dt}/title-48.xml"
+  cat ${tmpDir}raw-${dt}.xml
+  echo ""
+  exit 1
 fi
 
 #====================================================#
@@ -183,6 +199,10 @@ if [ "${includeFAR}" == "Y" ] ; then
   echo ""
   echo " - Update citations to internal links"
   ${scriptsDir}replaceCitation-far.sh
+
+  echo ""
+  echo " - Generate sitemap.xml"
+  ${scriptsDir}generate-site-map.sh ${dt}
   echo "======================================="
 
   cp ${resultsDir}*.meta ${farResultsDir}
