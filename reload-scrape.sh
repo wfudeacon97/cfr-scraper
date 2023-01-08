@@ -13,9 +13,11 @@ echo "Reloading scrape from  ${cfrDate}"
 
 ./reset.sh
 
-aws s3 sync  s3://${bucketName}/${cfrDate}/far/ ${resultsDir} --region ${awsRegion} --exclude "*" --include "*.meta"
+echo "aws s3 sync  s3://${bucketName}/${cfrDate}/ ${resultsDir} --region ${awsRegion}  --exclude \"*\" --include \"*.meta\" --include \"*.xml\""
 
-for dir in $(aws s3 ls s3://${bucketName}/${cfrDate}/ --recursive --human-readable --summarize | awk '{print $5}' | grep -v meta | grep -v "raw-${cfrDate}.tar.gz"); do
+aws s3 sync  s3://${bucketName}/${cfrDate}/ ${resultsDir} --region ${awsRegion} --exclude "*" --include "*.meta" --include "*.xml"
+
+for dir in $(aws s3 ls s3://${bucketName}/${cfrDate}/ --recursive --human-readable --summarize | awk '{print $5}' | grep -v meta | grep -v sitemap | grep -v "raw-${cfrDate}.tar.gz"); do
 
   fullFile=${dir/${cfrDate}\//}
   agencyName=$(cut -d'/' -f1 <<< "$fullFile")

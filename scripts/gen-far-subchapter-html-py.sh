@@ -18,6 +18,11 @@ print "        - Xml File: " + xmlFileToParse
 print "        - Chapter: " + chapterToParse
 print "        - Html Dir: " + htmlFolder
 
+# Generates 2 sets of files:
+# Example: 48.1.A.html
+# Does NOT include the redirect, because these are not scraped by Google, because they are not in the sitemap
+print 'gen-far-subchapter-html-py.sh: Generates x.y.[A-H].html'
+
 indentPixels=40
 class RawTitle():
     def __init__(self):
@@ -83,7 +88,7 @@ class CFRHandler( xml.sax.ContentHandler ):
          if currentTitle.ChapterNum == chapterToParse:
            newFile(1)
            currentTitle.subchapterFile = open(htmlFolder + "/" +currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.SubChapterNum + ".html", "a")
-           currentTitle.subchapterFile.write("<html lang=\"en\">\n<head>\n<!-- gen-far-subchapter-html -->\n<!-- GOOGLE-ADD- ->\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
+           currentTitle.subchapterFile.write("<html lang=\"en\">\n<head>\n<!-- gen-far-subchapter-html -->\n<!-- GOOGLE-ADD -->\n<!-- AD_SENSE -->\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/>")
            currentTitle.hasSubchapterFile = "Y"
       elif tag == "DIV5":
          currentTitle.Level = "Part"
@@ -138,7 +143,10 @@ class CFRHandler( xml.sax.ContentHandler ):
           if content != "\n":
             currentTitle.SubChapterStr = content
             if currentTitle.hasSubchapterFile == "Y" :
-              currentTitle.subchapterFile.write("\n<title>" + content.encode("utf-8") + "</title></head>\n<body>\n")
+              currentTitle.subchapterFile.write("\n<title>" + content.encode("utf-8") + "</title>\n")
+              currentTitle.subchapterFile.write("\n<meta name=\"title\" content=\"FAR " + content.encode("utf-8") + "\"/>")
+              # currentTitle.subchapterFile.write("\n<meta name=\"description\" content=\"FAR " + content.encode("utf-8") + "\"/>")
+              currentTitle.subchapterFile.write("\n</head>\n<body>\n")
               currentTitle.subchapterFile.write("<main role=\"main\">\n")
               currentTitle.subchapterFile.write("<article><h1>Federal Acquisition Regulation</h1>\n")
               currentTitle.subchapterFile.write("<nav role=\"navigation\" class=\"related-links\">\n")

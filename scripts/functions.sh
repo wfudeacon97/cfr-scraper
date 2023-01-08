@@ -15,3 +15,6 @@ resultsDir=results/
 scriptsDir="./scripts/"
 tmpDir="tmp/"
 connectDir=connect/
+
+enableAdSense="Y"
+enableAdSenseSuppl="Y"

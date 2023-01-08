@@ -18,6 +18,10 @@ print "        - Xml File: " + xmlFileToParse
 print "        - Chapter: " + chapterToParse
 print "        - Html Dir: " + htmlFolder
 
+# Example: 48.1.2.html
+# Example: 48.1.54-99.html
+print 'gen-far-part-html-py.sh: Generates x.y.[1-100].html'
+
 indentPixels=40
 class RawTitle():
     def __init__(self):
@@ -95,7 +99,7 @@ class CFRHandler( xml.sax.ContentHandler ):
          if currentTitle.ChapterNum == chapterToParse:
            newFile(1)
            currentTitle.partFile = open(htmlFolder + "/" +currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.PartNum + ".html", "a")
-           currentTitle.partFile.write("<html lang=\"en\">\n<head>\n<!-- gen-far-part-html -->\n<!-- GOOGLE-ADD -->\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">")
+           currentTitle.partFile.write("<html lang=\"en\">\n<head>\n<!-- gen-far-part-html -->\n<!-- GOOGLE-ADD -->\n<!-- AD_SENSE -->\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/>")
            currentTitle.hasPartFile = "Y"
       elif tag == "DIV6":
          currentTitle.Level = "SubPart"
@@ -121,7 +125,7 @@ class CFRHandler( xml.sax.ContentHandler ):
           currentTitle.partFile.write("<style type=\"text/css\">\n")
           currentTitle.partFile.write("a {text-decoration: none; font-size: 16px; color: #0072ce !important;}\n")
           currentTitle.partFile.write("a:hover {text-decoration: underline; color: #0072ce}\n")
-          currentTitle.partFile.write("body {background-color: #FFFFFF; font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;}\n")
+          currentTitle.partFile.write("body {background-color: \#FFFFFF; font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;}\n")
           currentTitle.partFile.write("</style>")
           currentTitle.partFile.write("</body>")
           #print "Closing file " + currentTitle.partFile.name
@@ -158,7 +162,21 @@ class CFRHandler( xml.sax.ContentHandler ):
           if content != "\n":
             currentTitle.PartStr = content
             if currentTitle.hasPartFile == "Y" :
-              currentTitle.partFile.write("\n<title>" + content.encode("utf-8") + "</title></head>\n<body>\n")
+              currentTitle.partFile.write("\n<title>" + content.encode("utf-8") + "</title>\n")
+              currentTitle.partFile.write("<meta name=\"title\" content=\"FAR " + content.encode("utf-8") + "\"/>\n")
+              # currentTitle.partFile.write("<meta name=\"description\" content=\"" + content.encode("utf-8") + "\"/>\n")
+              fileName=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.PartNum + ".html"
+              currentTitle.partFile.write("<script type = \"text/javascript\">\n")
+              currentTitle.partFile.write("window.onload = function(){\n")
+              currentTitle.partFile.write("   if ( window == window.parent ) {\n")
+              currentTitle.partFile.write("   window.location.replace(window.location.protocol + \"//\" + window.location.hostname + \"/regulations/539/"+ currentTitle.PartNum +"/" + fileName + "\");\n")
+              currentTitle.partFile.write("   }\n")
+              currentTitle.partFile.write(" else{\n")
+              currentTitle.partFile.write("   window.parent.document.title=\"FAR "+ content.encode("utf-8")+"\";\n")
+              currentTitle.partFile.write("   window.parent.document.getElementsByTagName(\"meta\")[\"title\"].content=\"FAR "+ content.encode("utf-8")+"\";\n")
+              currentTitle.partFile.write("   }\n")
+              currentTitle.partFile.write("}</script>\n")
+              currentTitle.partFile.write("</head>\n<body>\n")
               id=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "." + currentTitle.PartNum
               currentTitle.partFile.write("<article id=\"" + id +"\"><h1 id=\"subpart_"+id+"\"><span class=\"ph autonumber\">" + content.encode("utf-8") + "</span></h1>\n")
       elif currentTitle.Level == "SubPart":
