@@ -1,3 +1,20 @@
+4/28/2023
+  With the scrape for 2023-04-27 the split on the hyphen after "<HEAD>SUBCHAPTER A" is not working.
+      apparently the hyphen is now a special character
+
+3/7/2023
+  Indexing:  Internal links should follow:  https://openthefar.com/regulations/539/1/48.1.1.html
+      (Currently, they follow: https://openthefar.com/far/48.1.50.1.html)
+
+
+  Indexing Supplement:
+      (GOOD) https://openthefar.com/regulations/520/32/48.8.E.832.html#section_48.8.832.404
+      (BAD)  https://openthefar.com/vaar/48.8.E.832.html#section_48.8.832.404
+
+
+
+======================================
+
 11/26
   TEST:  DFARs is deployed (code is in Git stash in test/openthefar)
 

@@ -224,18 +224,6 @@ for ch in ${chapters//,/ }; do
       fi
 
       #==================================================#
-      ### Sitemap
-      #==================================================#
-      echo "- Remove old html for ${agencyName}"
-      echo "aws s3 cp ${resultsDir}/sitemap.xml s3://${bucketName}/sitemap.xml --region ${awsRegion}"
-      aws s3 cp ${resultsDir}/sitemap.xml s3://${bucketName}/sitemap.xml --region ${awsRegion}
-      if [ "${environment}" == "prod" ] || [ "${environment}" == "Prod" ] || [ "${environment}" == "PROD" ]; then
-        curl https://www.google.com/webmasters/sitemaps/ping?sitemap=https://openthefar.com/sitemap.xml
-      else
-        echo "${environment}: Skipping Sitemap notification"
-      fi
-
-      #==================================================#
       ### Remove old html records
       #==================================================#
       echo "- Remove old html for ${agencyName}"
@@ -248,6 +236,31 @@ for ch in ${chapters//,/ }; do
       echo "- Upload html to s3://${bucketName}/${agencyName}/ for ${agencyName}"
       echo "aws s3 sync ${farResultsDir}html/ s3://${bucketName}/${agencyName}/ --region ${awsRegion}"
       aws s3 sync ${farResultsDir}html/ s3://${bucketName}/${agencyName}/ --region ${awsRegion} --quiet
+
+      #==================================================#
+      ### Add Blog entries to Sitemap
+      #==================================================#
+      ## TODO: Update this from Wordpress
+      sed -i  -e "s/<\/urlset>//g" ${resultsDir}/sitemap.xml
+      echo "<url><loc>https://blog.openthefar.com/simplified-acquisition-procedures-for-government-contracting/</loc><lastmod>2023-01-01</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>" >> ${resultsDir}/sitemap.xml
+      echo "<url><loc>https://blog.openthefar.com/the-mission-of-the-department-of-veterans-affairs-and-what-the-future-holds/</loc><lastmod>2023-01-01</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>" >> ${resultsDir}/sitemap.xml
+      echo "<url><loc>https://blog.openthefar.com/federal-acquisition-regulations-on-business-practices-and-conflicts-of-interest-part-2/</loc><lastmod>2023-01-01</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>" >> ${resultsDir}/sitemap.xml
+      echo "<url><loc>https://blog.openthefar.com/federal-acquisition-regulations-on-business-practices-and-conflicts-of-interest-part-1/</loc><lastmod>2023-01-01</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>" >> ${resultsDir}/sitemap.xml
+      echo "<url><loc>https://blog.openthefar.com/a-quick-reference-guide-to-far-2-101-definitions/</loc><lastmod>2023-01-01</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>" >> ${resultsDir}/sitemap.xml
+      echo "<url><loc>https://blog.openthefar.com/what-is-fob-origin/</loc><lastmod>2023-01-01</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>" >> ${resultsDir}/sitemap.xml
+      echo "<url><loc>https://blog.openthefar.com/far-part-12-and-far-part-15/</loc><lastmod>2023-01-01</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>" >> ${resultsDir}/sitemap.xml
+      echo "</urlset>" >> ${resultsDir}/sitemap.xml
+      #==================================================#
+      ### Upload Sitemap
+      #==================================================#
+      echo "- Remove old sitemap for ${agencyName}"
+      echo "aws s3 cp ${resultsDir}/sitemap.xml s3://${bucketName}/sitemap.xml --region ${awsRegion}"
+      aws s3 cp ${resultsDir}/sitemap.xml s3://${bucketName}/sitemap.xml --region ${awsRegion}
+      if [ "${environment}" == "prod" ] || [ "${environment}" == "Prod" ] || [ "${environment}" == "PROD" ]; then
+        curl https://www.google.com/webmasters/sitemaps/ping?sitemap=https://openthefar.com/sitemap.xml
+      else
+        echo "${environment}: Skipping Sitemap notification"
+      fi
 
       #==================================================#
       ### Upload Elastic
