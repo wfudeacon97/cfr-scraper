@@ -61,6 +61,8 @@ if [ ${size} == "160" ]; then
   cat ${tmpDir}raw-${dt}.xml
   echo ""
   exit 1
+else
+  sed -i 's/—/-/g' ${tmpDir}raw-${dt}.xml 
 fi
 
 #====================================================#
@@ -187,6 +189,7 @@ if [ "${includeFAR}" == "Y" ] ; then
   #Div5
   python ${scriptsDir}gen-far-part-html-py.sh ${tmpDir}raw-${dt}.xml ${farResultsDir}html 1
   #Div6
+  #48.1.10.x.html
   python ${scriptsDir}gen-far-subpart-html-py.sh ${tmpDir}raw-${dt}.xml ${farResultsDir}html 1
 
   echo "    - Total files $(ls -Al ${farResultsDir}html/ | tail +2 | wc -l)"

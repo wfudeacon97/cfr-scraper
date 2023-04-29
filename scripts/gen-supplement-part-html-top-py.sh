@@ -113,7 +113,7 @@ class CFRHandler( xml.sax.ContentHandler ):
         ## This is the end of the top section of the file... add the authority and line break, and close the file
         if currentTitle.hasPartFile == "Y" :
           currentTitle.partFile.write("</table>")
-          currentTitle.partFile.write("<p id=authority>"+ currentTitle.authority+ "</p>\n")
+          currentTitle.partFile.write("<p id=authority>"+ currentTitle.authority.encode("utf-8") + "</p>\n")
           currentTitle.partFile.write("<hr/>\n")
           currentTitle.partFile.write("</article>\n")
           #currentTitle.partFile.write("<style type=\"text/css\">\n")

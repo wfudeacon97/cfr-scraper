@@ -64,7 +64,7 @@ def printSubChapterJson(currentTitle):
     #updatedAt
     #agencies
     jsonSubChapterFile.write(json.dumps(jsonData))
-    jsonSubChapterFile.write("\n")
+    jsonSubChapterFile.write("\n");
 
 
 ####### SubPart Json for hyphenated parts- Type 3
@@ -96,7 +96,7 @@ def createReservedJson(currentTitle, part):
     #updatedAt
     #agencies
     jsonSubPartFile.write(json.dumps(jsonData))
-    jsonSubPartFile.write("\n")
+    jsonSubPartFile.write("\n");
 
 ####### Part- Type 2
 # These are the Part records that create the grid on the Home page

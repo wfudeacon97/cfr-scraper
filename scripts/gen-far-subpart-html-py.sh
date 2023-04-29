@@ -125,7 +125,8 @@ class CFRHandler( xml.sax.ContentHandler ):
               subpart0FileName=currentTitle.TitleNum + "." + currentTitle.ChapterNum + "."  + currentTitle.PartNum
               newFile(1)
               currentTitle.subpart0File = open(htmlFolder + "/" +subpart0FileName + ".0.html", "a")
-              currentTitle.subpart0File.write("<html lang=\"en\">\n<head>\n<!-- gen-far-subpart-html -->\n<!-- GOOGLE-ADD -->\n<!-- AD_SENSE -->\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/>\n")
+              if currentTitle.hasSubPart0File == "N":
+                currentTitle.subpart0File.write("<html lang=\"en\">\n<head>\n<!-- gen-far-subpart-html -->\n<!-- GOOGLE-ADD -->\n<!-- AD_SENSE -->\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/>\n")
               currentTitle.hasSubPart0File = "Y"
               currentTitle.delayContent="Y"
 
@@ -133,6 +134,12 @@ class CFRHandler( xml.sax.ContentHandler ):
          if currentTitle.Level == "Section":
             if currentTitle.hasSubPartFile == "Y" :
               currentTitle.subpartFile.write("<p class=\"p\">")
+            if currentTitle.hasSubPart0File == "Y" :
+              if currentTitle.delayContent =="Y" :
+                currentTitle.subPart0DelayedContent=currentTitle.subPart0DelayedContent+ "<p class=\"p\">"
+              else:
+                currentTitle.subpart0File.write("<p class=\"p\">")
+
       #elif tag == "CITA":
       #   if currentTitle.Level == "Section":
       #      if currentTitle.hasSubPartFile == "Y" :
@@ -141,6 +148,11 @@ class CFRHandler( xml.sax.ContentHandler ):
          if currentTitle.Level == "Section":
             if currentTitle.hasSubPartFile == "Y" :
               currentTitle.subpartFile.write("<i>")
+            if currentTitle.hasSubPart0File == "Y" :
+              if currentTitle.delayContent =="Y" :
+                currentTitle.subPart0DelayedContent=currentTitle.subPart0DelayedContent+ "<i>"
+              else:
+                currentTitle.subpart0File.write("<i>")
 
     # Call when an elements ends
     def endElement(self, tag):
@@ -150,6 +162,9 @@ class CFRHandler( xml.sax.ContentHandler ):
         currentTitle.Level = "Chapter"
       elif tag == "DIV5":
         currentTitle.Level = "SubChapter"
+        if currentTitle.hasSubPart0File == "Y" :
+          if currentTitle.delayContent =="Y" :
+            currentTitle.subpart0File.write(currentTitle.subPart0DelayedContent.encode("utf-8"))
       elif tag == "DIV6":
         currentTitle.Level = "Part"
         #print "Checking end of file " + currentTitle.subpartFile.name
